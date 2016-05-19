@@ -1,16 +1,15 @@
 use "net/http"
+use ".."
 
 actor Main
   new create(env: Env) =>
-    let service = "8080"
-    let limit = USize(100)
-
     try
       let auth = env.root as AmbientAuth
-      Server(auth, Info(env), Handle, CommonLog(env.out)
-        where service = service, limit = limit, reversedns = auth)
+      let router = Router(env)
+      Server(auth, Info(env), router, CommonLog(env.out)
+        where service = "8080", limit = USize(100), reversedns = auth)
     else
-      env.out.print("unable to use network")
+      env.out.print("unable to use network.")
     end
 
 class iso Info
@@ -33,10 +32,3 @@ class iso Info
 
   fun ref closed(server: Server ref) =>
     _env.out.print("Shutdown.")
-
-primitive Handle
-  fun val apply(req: Payload) =>
-    let res = Payload.response()
-    res.add_chunk("You asked for ")
-    res.add_chunk(req.url.path)
-    (consume req).respond(consume res)

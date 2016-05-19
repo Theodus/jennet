@@ -1,8 +1,9 @@
-class _RouterGroup
-  let _middleware: Array[Middleware]
-  let _handler: RequestHandler
 
-  new create(middleware: Array[Middleware], handler: RequestHandler) =>
+class _HandlerGroup
+  let _middleware: Array[Middleware]
+  let _handler: Handler
+
+  new create(middleware: Array[Middleware], handler: Handler) =>
     _middleware = middleware
     _handler = handler
 
@@ -20,11 +21,3 @@ class _RouterGroup
     else
       _exec_middleware(i + 1, _middleware(i)(consume c))
     end
-
-interface Middleware
-  // TODO docs
-  fun apply(c: Context): Context iso^
-
-interface RequestHandler
-  // TODO docs
-  fun apply(c: Context): Any tag
