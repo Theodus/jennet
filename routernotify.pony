@@ -1,6 +1,6 @@
 use "net"
 
-class _RouterNotify is TCPListenNotify
+class iso _RouterNotify
   let _router: Router
   let _logger: Logger
 
@@ -10,7 +10,7 @@ class _RouterNotify is TCPListenNotify
 
   fun ref listening(router: Router ref) =>
     try
-      (let host, let service) = server.local_address().name()
+      (let host, let service) = router.local_address().name()
       _logger.print("Listening on " + host + ":" + service)
     else
       _logger.print("Couldn't get local address.")
