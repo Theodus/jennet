@@ -1,4 +1,3 @@
-
 class _RouterGroup
   let _middleware: Array[Middleware]
   let _handler: RequestHandler
@@ -7,7 +6,7 @@ class _RouterGroup
     _middleware = middleware
     _handler = handler
 
-  fun val apply(c: Context) ? =>
+  fun apply(c: Context) ? =>
     let c' = match _middleware.size()
     | 0 => consume c
     else
@@ -15,7 +14,7 @@ class _RouterGroup
     end
     _handler(consume c')
 
-  fun val _exec_middleware(i: USize, c: Context): Context iso^ ? =>
+  fun _exec_middleware(i: USize, c: Context): Context iso^ ? =>
     match i
     | _middleware.size() => consume c
     else
@@ -23,7 +22,9 @@ class _RouterGroup
     end
 
 interface Middleware
+  // TODO docs
   fun apply(c: Context): Context iso^
 
 interface RequestHandler
-  fun val apply(c: Context): Any tag
+  // TODO docs
+  fun apply(c: Context): Any tag
