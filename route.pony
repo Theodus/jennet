@@ -1,16 +1,16 @@
 
 // TODO docs
 
-class _Route
+class val _Route
   let method: String
   let path: String
   let handler: Handler
-  let middleware: Array[Middleware]
+  let middlewares: Middlewares
 
-  new create(method': String, path': String, handler': Handler,
-    middleware': Array[Middleware])
+  new val create(method': String, path': String, handler': Handler,
+    middlewares': Middlewares)
   =>
     method = method'
     path = path'
     handler = handler'
-    middleware = middleware'
+    middlewares = middlewares'

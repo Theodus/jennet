@@ -1,11 +1,15 @@
 use "net/http"
 use ".."
+use "debug"
 
 actor Main
   new create(env: Env) =>
     try
       let auth = env.root as AmbientAuth
       let router = Router
+      let mw1 = recover Array[Middleware](1) end
+      mw1.push(MW)
+      let mw = Middlewares(consume mw1)
       router.get("/", object
         fun val apply(c: Context, req: Payload): Context iso^ =>
           let res = Payload.response()
@@ -19,6 +23,13 @@ actor Main
     else
       env.out.print("unable to use network.")
     end
+
+class val MW is Middleware
+  fun val apply(c: Context, req: Payload): (Context iso^, Payload iso^) =>
+    Debug.out("--- yup. ---")
+    (consume c, consume req)
+  fun val after(c: Context): Context iso^ =>
+    consume c
 
 class iso Info
   let _env: Env

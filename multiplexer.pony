@@ -9,7 +9,7 @@ class _Multiplexer
   new create(routes: Array[_Route]) =>
     _routes = Map[String, _HandlerGroup](routes.size())
     for r in routes.values() do
-      _routes(r.path) = _HandlerGroup(r.middleware, r.handler)
+      _routes(r.path) = _HandlerGroup(r.middlewares, r.handler)
     end
 
   fun apply(request: Payload) ? =>
