@@ -30,7 +30,7 @@ class _HandlerGroup
 
   fun _middlewares_after(i: USize, c: Context): Context iso^ ? =>
     match i
-    | 0 => consume c
+    | -1 => consume c
     else
       _middlewares_after(i - 1, _middlewares(i).after(consume c))
     end

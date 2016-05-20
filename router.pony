@@ -59,12 +59,12 @@ class iso Router
     _mux = _Multiplexer(_routes)
 
 
-interface val Middleware
+trait val Middleware
   fun val apply(c: Context, req: Payload): (Context iso^, Payload iso^)
   fun val after(c: Context): Context iso^
 
 
-interface val Handler
+trait val Handler
   fun val apply(c: Context, req: Payload): Context iso^
 
 
