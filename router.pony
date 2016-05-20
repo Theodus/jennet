@@ -42,15 +42,15 @@ class iso Router
     end
 
   fun ref get(path: String, handler: Handler,
-    middlewares: Middlewares = Middlewares(None))
+    middlewares: Array[Middleware] val = recover Array[Middleware] end)
   =>
     let bms = _base_middlewares.size()
     let ms = recover
-      Array[Middleware](bms + middlewares.ms.size())
+      Array[Middleware](bms + middlewares.size())
     end
     for m in _base_middlewares.values() do ms.push(m) end
-    for m in middlewares.ms.values() do ms.push(m) end
-    let route = _Route("GET", path, handler, Middlewares(consume ms))
+    for m in middlewares.values() do ms.push(m) end
+    let route = _Route("GET", path, handler, consume ms)
     _routes.push(route)
 
   // TODO other methods
@@ -68,12 +68,4 @@ interface val Handler
   fun val apply(c: Context, req: Payload): Context iso^
 
 
-class val Middlewares
-  let ms: Array[Middleware]
-
-  new val create(middlewares: (Array[Middleware] iso | None)) =>
-    ms = match consume middlewares
-    | let ms': Array[Middleware] iso => consume ms'
-    else
-      recover Array[Middleware] end
-    end
+type Middlewares is Array[Middleware] val

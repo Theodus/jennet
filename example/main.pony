@@ -1,5 +1,6 @@
 use "net/http"
 use ".."
+
 use "debug"
 
 actor Main
@@ -7,16 +8,18 @@ actor Main
     try
       let auth = env.root as AmbientAuth
       let router = Router
-      let mw1 = recover Array[Middleware](1) end
-      mw1.push(MW)
-      let mw = Middlewares(consume mw1)
+      let mw = recover val
+        let ma = Array[Middleware](1)
+        ma.push(MW)
+        consume ma
+      end
       router.get("/", object
         fun val apply(c: Context, req: Payload): Context iso^ =>
           let res = Payload.response()
           res.add_chunk("yup.")
           (consume req).respond(consume res)
           consume c
-      end)
+      end, mw)
       router.start()
       Server(auth, Info(env), consume router, CommonLog(env.out)
         where service = "8080", limit = USize(100), reversedns = auth)
@@ -24,7 +27,7 @@ actor Main
       env.out.print("unable to use network.")
     end
 
-class val MW is Middleware
+class MW is Middleware
   fun val apply(c: Context, req: Payload): (Context iso^, Payload iso^) =>
     Debug.out("--- yup. ---")
     (consume c, consume req)

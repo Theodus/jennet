@@ -9,12 +9,12 @@ class _HandlerGroup
     _handler = handler
 
   fun apply(c: Context, req: Payload) ? =>
-    match _middlewares.ms.size()
+    match _middlewares.size()
     | 0 =>
       _handler(consume c, consume req)
     else
       (let c', let req') = _middlewares_apply(0, consume c, consume req)
-      _middlewares_after(_middlewares.ms.size() - 1,
+      _middlewares_after(_middlewares.size() - 1,
         _handler(consume c', consume req'))
     end
 
@@ -22,9 +22,9 @@ class _HandlerGroup
     (Context iso^, Payload iso^) ?
   =>
     match i
-    | _middlewares.ms.size() => (consume c, consume req)
+    | _middlewares.size() => (consume c, consume req)
     else
-      (let c', let req') = _middlewares.ms(i)(consume c, consume req)
+      (let c', let req') = _middlewares(i)(consume c, consume req)
       _middlewares_apply(i + 1, consume c', consume req')
     end
 
@@ -32,5 +32,5 @@ class _HandlerGroup
     match i
     | 0 => consume c
     else
-      _middlewares_after(i - 1, _middlewares.ms(i).after(consume c))
+      _middlewares_after(i - 1, _middlewares(i).after(consume c))
     end
