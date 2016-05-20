@@ -7,7 +7,11 @@ actor Main
       let auth = env.root as AmbientAuth
       let router = Router
       router.get("/", object
-        fun val apply(c: Context) => (consume c).respond_string("yup.")
+        fun val apply(c: Context, req: Payload): Context iso^ =>
+          let res = Payload.response()
+          res.add_chunk("yup.")
+          (consume req).respond(consume res)
+          consume c
       end)
       router.start()
       Server(auth, Info(env), consume router, CommonLog(env.out)

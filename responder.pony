@@ -1,5 +1,5 @@
 use "net/http"
-
+/*
 actor _Responder
   be apply(request: Payload, mux: _Multiplexer) =>
     try
@@ -22,3 +22,4 @@ actor _Responder
     let res = Payload.response(503, "Service Unavailable")
     res.add_chunk("503: Service Unavailable")
     (consume request).respond(consume res)
+*/
