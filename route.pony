@@ -1,11 +1,11 @@
 
 // TODO docs
 
-interface Middleware
-  fun apply(c: Context): Context iso^
+interface val Middleware
+  fun val apply(c: Context): Context iso^
 
-interface Handler
-  fun apply(c: Context): Any tag
+interface val Handler
+  fun val apply(c: Context)
 
 class Route
   let _method: String
@@ -14,12 +14,16 @@ class Route
   let _middleware: Array[Middleware]
 
   new _create(method': String, path': String, handler': Handler,
-    middleware': Array[Middleware])
+    middleware': (Array[Middleware] | None))
   =>
     _method = method'
     _path = path'
     _handler = handler'
-    _middleware = middleware'
+    _middleware = match middleware'
+    | let m: Array[Middleware] => m
+    else
+      Array[Middleware]()
+    end
 
   fun ref set(mw: Array[Middleware]) =>
     for m in mw.values() do

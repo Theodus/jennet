@@ -15,10 +15,17 @@ class iso Context
     _params = consume params'
     _data = consume data'
 
-  fun val request(): Payload val => _request
+  fun val param(key: String): String val ? =>
+    _params(key)
 
-  fun val param(key: String): String val ? => _params(key)
+  fun val get(key: String): Any ? =>
+    _data(key)
 
-  fun val get(key: String): Any ? => _data(key)
+  fun ref update(key: String, value: Any) =>
+    _data.update(key, value)
 
-  fun ref update(key: String, value: Any) => _data.update(key, value)
+  // TODO more response options
+  fun iso respond_string(msg: String) =>
+    let res = recover Payload.response() end
+    res.add_chunk(msg)
+    (consume this)._request.respond(consume res)

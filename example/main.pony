@@ -5,8 +5,12 @@ actor Main
   new create(env: Env) =>
     try
       let auth = env.root as AmbientAuth
-      let router = Router(env)
-      Server(auth, Info(env), router, CommonLog(env.out)
+      let router = Router
+      router.get("/", object
+        fun val apply(c: Context) => (consume c).respond_string("yup.")
+      end)
+      router.start()
+      Server(auth, Info(env), consume router, CommonLog(env.out)
         where service = "8080", limit = USize(100), reversedns = auth)
     else
       env.out.print("unable to use network.")
