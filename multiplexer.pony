@@ -3,17 +3,23 @@ use "net/http"
 
 // TODO Radix Mux
 
-class _Multiplexer
+class val _Multiplexer
   let _routes: Map[String, _HandlerGroup]
+  let _not_found: _HandlerGroup
 
-  new create(routes: Array[_Route]) =>
+  new val create(routes: Array[_Route] iso, notfound: Handler) =>
     _routes = Map[String, _HandlerGroup](routes.size())
-    for r in routes.values() do
+    for r in (consume routes).values() do
       _routes(r.path) = _HandlerGroup(r.middlewares, r.handler)
     end
+    _not_found = _HandlerGroup(recover Array[Middleware] end, notfound)
 
-  fun apply(request: Payload) ? =>
-    let hg = _routes(request.url.string())
+  fun val apply(req: Payload) =>
+    let hg = try
+      _routes(req.url.string())
+    else
+      _not_found
+    end
     let params = recover Map[String, String]() end
     let data = recover Map[String, Any]() end
-    hg(Context(consume params, consume data), consume request)
+    try hg(Context(consume params, consume data), consume req) end

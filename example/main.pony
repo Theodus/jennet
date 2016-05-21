@@ -5,7 +5,7 @@ actor Main
   new create(env: Env) =>
     try
       let auth = env.root as AmbientAuth
-      let router = Router
+      let rb = RouteBuilder
       let mw = recover val
         let ma = Array[Middleware](2)
         ma.push(MW(env, 0))
@@ -20,9 +20,8 @@ actor Main
         ma.push(MW(env, 9))
         consume ma
       end
-      router.get("/", H(env), mw)
-      router.start()
-      Server(auth, Info(env), consume router, DiscardLog
+      rb.get("/", H(env), mw)
+      Server(auth, Info(env), (consume rb).build(), DiscardLog
         where service = "8080", limit = USize(100), reversedns = auth)
     else
       env.out.print("unable to use network.")

@@ -1,14 +1,14 @@
 use "net/http"
 
-class _HandlerGroup
+class val _HandlerGroup
   let _middlewares: Middlewares
   let _handler: Handler
 
-  new create(middlewares: Middlewares, handler: Handler) =>
+  new val create(middlewares: Middlewares, handler: Handler) =>
     _middlewares = middlewares
     _handler = handler
 
-  fun apply(c: Context, req: Payload) ? =>
+  fun val apply(c: Context, req: Payload) ? =>
     match _middlewares.size()
     | 0 =>
       _handler(consume c, consume req)
@@ -18,7 +18,7 @@ class _HandlerGroup
         _handler(consume c', consume req'))
     end
 
-  fun _middlewares_apply(i: USize, c: Context, req: Payload):
+  fun val _middlewares_apply(i: USize, c: Context, req: Payload):
     (Context iso^, Payload iso^) ?
   =>
     match i
