@@ -1,6 +1,4 @@
 
-// TODO docs
-
 class val _Route
   let method: String
   let path: String

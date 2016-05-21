@@ -2,13 +2,15 @@ use "time"
 use "net/http"
 use "net"
 
-// TODO docs
 // TODO common log
 
 interface val Responder
+  """
+  Responds to the request and creates a log.
+  """
   fun val apply(req: Payload, res: Payload, response_time: String)
 
-class val _DefaultResponder is Responder
+class val DefaultResponder is Responder
   let _out: OutStream
 
   new val create(out: OutStream) =>

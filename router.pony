@@ -5,8 +5,6 @@ use "collections"
 
 /* TODO
  - dirty routes (route correction)
- - method not allowed handler
- - internal server error
  - serve_file
  - serve_dir
 
@@ -14,9 +12,10 @@ Middleware:
  - basic auth
 */
 
-// TODO docs
-
 class val Router
+  """
+  Routes incomming requests to the corresponding middlewares and handler.
+  """
   var _mux: _Multiplexer
 
   new val create(mux: _Multiplexer) =>

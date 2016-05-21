@@ -1,9 +1,10 @@
 use "time"
 use "net/http"
 
-// TODO docs
-
 class val ResponseTimer is Middleware
+  """
+  Places start time in the context.
+  """
   fun val apply(c: Context, req: Payload): (Context iso^, Payload iso^) =>
     c("start_time") = Time.nanos()
     (consume c, consume req)
@@ -12,6 +13,10 @@ class val ResponseTimer is Middleware
     consume c
 
 primitive TimeFormat
+  """
+  Formats the time difference between the current time and the start time so
+  that the correct units of time are logged.
+  """
   fun apply(start_time: U64): String =>
     let end_time = Time.nanos()
     let time = (end_time - start_time).string()
