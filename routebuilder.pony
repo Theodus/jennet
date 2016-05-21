@@ -6,9 +6,11 @@ class iso RouteBuilder
   let _routes: Array[_Route] iso = recover Array[_Route] end
   let _base_middlewares: Array[Middleware]
   var _not_found: Handler = _DefaultNotFound
+  let _logger: ResponseLogger
 
-  new iso create() =>
+  new iso create(out: OutStream) =>
     _base_middlewares = Array[Middleware]
+    _logger = _DefaultLogger(out)
 
   //TODO default
 
@@ -28,7 +30,8 @@ class iso RouteBuilder
 
   fun iso build(): Router =>
     let nf = _not_found
-    let mux = _Multiplexer((consume this)._routes, nf)
+    let l = _logger
+    let mux = _Multiplexer((consume this)._routes, nf, l)
     Router(mux)
 
 class _DefaultNotFound is Handler

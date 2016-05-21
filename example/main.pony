@@ -5,7 +5,7 @@ actor Main
   new create(env: Env) =>
     try
       let auth = env.root as AmbientAuth
-      let rb = RouteBuilder
+      let rb = RouteBuilder(env.out)
       let mw = recover val
         let ma = Array[Middleware](2)
         ma.push(MW(env, 0))
@@ -61,7 +61,7 @@ class H is Handler
     let res = Payload.response()
     res.add_chunk("yup.")
     _env.out.print("--- Handler")
-    (consume req).respond(consume res)
+    c.respond(consume req, consume res)
     consume c
 
 class iso Info

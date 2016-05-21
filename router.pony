@@ -9,11 +9,12 @@ use "collections"
  - internal server error
  - serve_file
  - serve_dir
- - docs
 
 Middleware:
- - logging (colorful)
+ - basic auth
 */
+
+// TODO docs
 
 class val Router
   var _mux: _Multiplexer
@@ -25,10 +26,10 @@ class val Router
     _mux(consume request)
 
 interface val Middleware
-  fun val apply(c: Context, req: Payload): (Context iso^, Payload iso^)
+  fun val apply(c: Context, req: Payload): (Context iso^, Payload iso^) ?
   fun val after(c: Context): Context iso^
 
 interface val Handler
-  fun val apply(c: Context, req: Payload): Context iso^
+  fun val apply(c: Context, req: Payload): Context iso^ ?
 
 type Middlewares is Array[Middleware] val
