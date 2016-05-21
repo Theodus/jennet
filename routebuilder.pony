@@ -9,10 +9,15 @@ class iso RouteBuilder
   let _logger: ResponseLogger
 
   new iso create(out: OutStream) =>
-    _base_middlewares = Array[Middleware]
+    _base_middlewares = Array[Middleware](1)
+    _base_middlewares.push(ResponseTimer)
     _logger = _DefaultLogger(out)
 
-  //TODO default
+  new iso base_middleware(logger: ResponseLogger,
+    mw: Array[Middleware] iso = recover Array[Middleware] end)
+  =>
+    _base_middlewares = recover consume mw end
+    _logger = logger
 
   fun ref get(path: String, handler: Handler,
     middlewares: Array[Middleware] val = recover Array[Middleware] end)

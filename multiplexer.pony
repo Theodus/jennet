@@ -25,7 +25,6 @@ class val _Multiplexer
       _notfound
     end
     let params = recover Map[String, String]() end
-    let data = recover Map[String, Any]() end
     try
-      hg(Context(consume params, consume data, _responselogger), consume req)
+      hg(Context(consume params, _responselogger), consume req)
     end
