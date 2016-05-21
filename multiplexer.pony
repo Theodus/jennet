@@ -6,17 +6,17 @@ use "net/http"
 class val _Multiplexer
   let _routes: Map[String, _HandlerGroup]
   let _notfound: _HandlerGroup
-  let _responselogger: ResponseLogger
+  let _responder: Responder
 
   new val create(routes: Array[_Route] iso, notfound: Handler,
-    responselogger: ResponseLogger)
+    responder: Responder)
   =>
     _routes = Map[String, _HandlerGroup](routes.size())
     for r in (consume routes).values() do
       _routes(r.path) = _HandlerGroup(r.middlewares, r.handler)
     end
     _notfound = _HandlerGroup(recover Array[Middleware] end, notfound)
-    _responselogger = responselogger
+    _responder = responder
 
   fun val apply(req: Payload) =>
     let hg = try
@@ -26,5 +26,5 @@ class val _Multiplexer
     end
     let params = recover Map[String, String]() end
     try
-      hg(Context(consume params, _responselogger), consume req)
+      hg(Context(_responder, consume params), consume req)
     end

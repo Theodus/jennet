@@ -4,14 +4,14 @@ use "net/http"
 // TODO docs
 
 class iso Context
+  let _responder: Responder
   let _params: Map[String, String]
   let _data: Map[String, Any val]
-  let _logger: ResponseLogger
 
-  new iso create(params': Map[String, String] iso, logger': ResponseLogger) =>
+  new iso create(responder': Responder, params': Map[String, String] iso) =>
+    _responder = responder'
     _params = consume params'
     _data = Map[String, Any val]
-    _logger = logger'
 
   fun val param(key: String): String val ? =>
     _params(key)
@@ -27,8 +27,6 @@ class iso Context
       let st = _data("start_time") as U64
       TimeFormat(st)
     else
-      ""
+      "-----"
     end
-    _logger(req.method, req.url.path, res.proto, res.status, res.body_size(),
-      response_time)
-    (consume req).respond(consume res)
+    _responder(consume req, consume res, response_time)
