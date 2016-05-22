@@ -35,21 +35,25 @@ class iso RouteBuilder
     Route incomming GET requests to path through the given middlewares and
     handler.
     """
+    _add_route("GET", path, handler, middlewares)
+
+  // TODO other methods
+  // TODO not_found
+
+  fun ref serve_file(auth: AmbientAuth, path: String, filepath: String) =>
+    _add_route("GET", path, _FileServer(auth, filepath),
+    recover Array[Middleware] end)
+
+  fun ref _add_route(method: String, path: String,
+    handler: Handler, middlewares: Array[Middleware] val)
+  =>
     let bms = _base_middlewares.size()
     let ms = recover
       Array[Middleware](bms + middlewares.size())
     end
     for m in _base_middlewares.values() do ms.push(m) end
     for m in middlewares.values() do ms.push(m) end
-    let route = _Route("GET", path, handler, consume ms)
-    _routes.push(route)
-
-  // TODO other methods
-  // TODO not_found
-
-  fun ref serve_file(auth: AmbientAuth, path: String, filepath: String) =>
-    let route = _Route("GET", path, _FileServer(auth, filepath),
-      recover Array[Middleware] end)
+    let route = _Route(method, path, handler, consume ms)
     _routes.push(route)
 
   fun iso build(): Router =>
