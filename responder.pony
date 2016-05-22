@@ -1,6 +1,5 @@
 use "time"
 use "net/http"
-use "net"
 
 // TODO common log
 
@@ -10,7 +9,7 @@ interface val Responder
   """
   fun val apply(req: Payload, res: Payload, response_time: String)
 
-class val DefaultResponder is Responder
+class DefaultResponder is Responder
   let _out: OutStream
 
   new val create(out: OutStream) =>
@@ -18,9 +17,9 @@ class val DefaultResponder is Responder
 
   fun val apply(req: Payload, res: Payload, response_time: String) =>
     let time = Date(Time.seconds()).format("%d/%b/%Y %H:%M:%S")
-    let list = recover Array[String](13) end
+    let list = recover Array[String](17) end
     list.push("[")
-    list.push("Pony") // TODO name
+    list.push("Jennet")
     list.push("] ")
     list.push(time)
     list.push(" |")
@@ -49,3 +48,47 @@ class val DefaultResponder is Responder
     list.push("\n")
     _out.writev(consume list)
     (consume req).respond(consume res)
+
+class CommonResponder is Responder
+  let _out: OutStream
+
+  new val create(out: OutStream) =>
+    _out = out
+
+  fun val apply(req: Payload, res: Payload, response_time: String) =>
+    let list = recover Array[String](24) end
+    let host = "Jennet"
+    list.push(host)
+    list.push(" - ")
+    list.push(_entry(req.url.user))
+    let time = Date(Time.seconds()).format("%d/%b/%Y:%H:%M:%S +0000")
+    list.push(" [")
+    list.push(time)
+    list.push("] \"")
+    list.push(req.method)
+    list.push(" ")
+    list.push(req.url.path)
+    if req.url.query.size() > 0 then
+      list.push("?")
+      list.push(req.url.query)
+    end
+    if req.url.fragment.size() > 0 then
+      list.push("#")
+      list.push(req.url.fragment)
+    end
+    list.push(" ")
+    list.push(req.proto)
+    list.push("\" ")
+    list.push(res.status.string())
+    list.push(" ")
+    list.push(res.body_size().string())
+    list.push(" \"")
+    try list.push(req("Referrer")) end
+    list.push("\" \"")
+    try list.push(req("User-Agent")) end
+    list.push("\"\n")
+    _out.writev(consume list)
+    (consume req).respond(consume res)
+
+  fun _entry(s: String): String =>
+    if s.size() > 0 then s else "-" end

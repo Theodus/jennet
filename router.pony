@@ -1,16 +1,4 @@
-use "net"
-use "net/ssl"
 use "net/http"
-use "collections"
-
-/* TODO
- - dirty routes (route correction)
- - serve_file
- - serve_dir
-
-Middleware:
- - basic auth
-*/
 
 class val Router
   """
