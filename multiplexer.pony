@@ -31,65 +31,77 @@ class val _Multiplexer
 // TODO Radix Mux
 // TODO docs
 
-trait _Entry
+trait _RMNode
   fun update(path: String, hg: _HandlerGroup)
-  fun apply(path: String, params: Map[String, String]): _HandlerGroup ?
+  fun apply(path: String, method: String, params: Map[String, String]):
+    _HandlerGroup ?
 
-class _Node is _Entry
+trait _RMLeaf
+  fun apply(path: String, method: String, params: Map[String, String]):
+    _HandlerGroup ?
+
+class _Node is _RMNode
   let _preifx: String
-  let _children: Array[_Entry]
+  let _children: Array[_RMNode]
+  let _leaves: Array[_RMLeaf]
 
   fun update(path: String, hg: _HandlerGroup) =>
     // TODO
     None
 
-  fun apply(path: String, params: Map[String, String]): _HandlerGroup ? =>
+  fun apply(path: String, method: String, params: Map[String, String]):
+    _HandlerGroup ?
+  =>
     // TODO
     None
 
-class _Param is _Entry
+class _Param is _RMNode
   let _name: String
-  let _children: Array[_Entry]
+  let _children: Array[_RMNode]
 
   fun update(path: String, hg: _HandlerGroup) =>
     // TODO
     None
 
-  fun apply(path: String, params: Map[String, String]): _HandlerGroup ? =>
+  fun apply(path: String, method: String, params: Map[String, String]):
+    _HandlerGroup ?
+  =>
     // TODO
     None
 
-class _Edge is _Entry
+class _Edge is _RMLeaf
   let _hg: _HandlerGroup
+  let _method: String
 
-  fun update(path: String, hg: _HandlerGroup) =>
-    // TODO
-    None
+  fun apply(path: String, method: String, params: Map[String, String]):
+    _HandlerGroup ?
+  =>
+    if method == _method then
+      _hg
+    else
+      error
+    end
 
-  fun apply(path: String, params: Map[String, String]): _HandlerGroup ? =>
-    // TODO
-    None
-
-class _Leaf is _Entry
+class _Leaf is _RMLeaf
   let _prefix: String
+  let _method: String
   let _hg: _HandlerGroup
 
-  fun update(path: String, hg: _HandlerGroup) =>
-    // TODO
-    None
+  fun apply(path: String, method: String, params: Map[String, String]):
+    _HandlerGroup ?
+  =>
+    if method == _method then
+      _hg
+    else
+      error
+    end
 
-  fun apply(path: String, params: Map[String, String]): _HandlerGroup ? =>
-    // TODO
-    None
-
-class _Wild is _Entry
+class _Wild is _RMLeaf
   let _name: String
   let _hg: _HandlerGroup
 
-  fun update(path: String, hg: _HandlerGroup) =>
-    // TODO
-    None
-
-  fun apply(path: String, params: Map[String, String]): _HandlerGroup ? =>
+  fun apply(path: String, method: String, params: Map[String, String]):
+    _HandlerGroup ?
+  =>
     // TODO
     None
