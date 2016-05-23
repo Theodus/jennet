@@ -27,7 +27,7 @@ class val _Multiplexer
       hg(Context(_responder, consume params), consume req)
     end
 
-
+/*
 // TODO Radix Mux
 // TODO docs
 
@@ -105,3 +105,4 @@ class _Wild is _RMLeaf
   =>
     // TODO
     None
+*/

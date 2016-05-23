@@ -3,6 +3,8 @@ use "net/http"
 
 // TODO common log
 
+// TODO find out how to get IP address
+
 interface val Responder
   """
   Responds to the request and creates a log.
