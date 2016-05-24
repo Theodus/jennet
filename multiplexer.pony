@@ -28,179 +28,74 @@ class val _Multiplexer
     end
 
 // TODO Radix Mux
-// TODO docs
+// TODO mux tests
+// TODO docs (readme explanation)
 
-class _RadixMux
-  let root: _Node
+class _Multiplexer1 // TODO replace other mux
+  let _trees: Map[String, _Tree]
 
-  new create() =>
-    root = _Node("/")
-
-  fun update(path: String, hg: _HandlerGroup) =>
-    // TODO
-    None
-
-  fun ref apply(req: Payload): (_HandlerGroup, Map[String, String]) ? =>
-    var path = recover iso req.url.path.clone() end
-    let method = req.method
-    let params = Map[String, String]
-    let hg = root(consume path, method, params)
-    (hg, params)
-
-class _Node
-  let prefix: String
-  let _edge: (_Edge | None) = None
-  let _children: Array[_Node] = Array[_Node]
-  let _leaves: Array[_Leaf] = Array[_Leaf]
-  let _wild: (_Wild | None) = None
-  let _param: (_Param | None) = None
-
-  new create(prefix': String) =>
-    prefix = prefix'
-
-  fun update(path: String iso, hg: _HandlerGroup) =>
-    // TODO
-    None
-
-  fun ref apply(path: String iso, method: String, params: Map[String, String]):
-    _HandlerGroup ?
-  =>
-    if path.substring(0, prefix.size().isize()) == prefix then
-      path.delete(0, prefix.size())
+  fun add(route: _Route) ? =>
+    let path = route.path
+    if path(path.size() - 1) != '/' then
+      path.append("/")
+    end
+    let method = route.method
+    let hg = _HandlerGroup(route.middlewares, route.handler)
+    if _trees.contains(method) then
+      let chunks = chunk(path)
+      _trees(method).add(chunks, hg)
     else
-      error
+      _trees(method) = _Tree(chunks, hg)
     end
 
-    // Short circuit for edge
-    if (path.size() == 0) then
-      match _edge
-      | let e: _Edge => return e(consume path, method, params)
+  fun apply(req: Payload) ? =>
+    let tree = _trees(req.method)
+    let chunks = chunk(req.url.path)
+    tree(chunks)
+
+  fun chunk(path: String): Array[_Chunk] ? =>
+    let ss = path.split("/")
+    let cs = Array[_Chunk](ss.size())
+    for (i, s) in ss.pairs() do
+      if i == (ss.size() - 1) then
+        match s
+        | "" => cs.push(_Edge)
+        else // TODO correct // ?
+          if s(0) == '*' then
+            cs.push(_Wild(s.substring(1)))
+          end
+        end
       else
-        error
+        match s(0)
+        | ':' =>
+          cs.push(_Param(s.substring(1)))
+        else
+          cs.push(s)
+        end
       end
     end
+    cs
 
-    let next = path(0)
-    for c in _children.values() do
-      if c.prefix(0) == next then
-        return c(consume path, method, params)
-      end
-    end
-    for l in _leaves.values() do
-      if l.prefix(0) == next then
-        return l(consume path, method, params)
-      end
-    end
-    match _wild
-    | let w: _Wild => return w(consume path, method, params)
-    end
-    match _param
-    | let p: _Param => return p(consume path, method, params)
-    end
-    error
+type _Chunk is (String | _Param | _Wild | _Edge)
 
-class _Param
-  let _name: String
-  let _edge: (_Edge | None) = None
-  let _children: Array[_Node] = Array[_Node]
-  let _leaves: Array[_Leaf] = Array[_Leaf]
-  let _wild: (_Wild | None) = None
-  let _param: (_Param | None) = None
+class val _Param
+  let name: String
 
-  new create(name: String) =>
-    _name = name
+  new val create(name': String) =>
+    name = name'
 
-  fun update(path: String iso, hg: _HandlerGroup) =>
-    // TODO
-    None
+class val _Wild
+  let name: String
 
-  fun ref apply(path: String iso, method: String, params: Map[String, String]):
-    _HandlerGroup ?
-  =>
-    let s = path.substring(0, path.find("/"))
-    path.delete(0, s.size())
-    params(_name) = consume s
+  new val create(name': String) =>
+    name = name'
 
-    // Short circuit for edge
-    if (path.size() == 0) then
-      match _edge
-      | let e: _Edge => return e(consume path, method, params)
-      else
-        error
-      end
-    end
+primitive _Edge
 
-    let next = path(0)
-    for c in _children.values() do
-      if c.prefix(0) == next then
-        return c(consume path, method, params)
-      end
-    end
-    for l in _leaves.values() do
-      if l.prefix(0) == next then
-        return l(consume path, method, params)
-      end
-    end
-    match _wild
-    | let w: _Wild => return w(consume path, method, params)
-    end
-    match _param
-    | let p: _Param => return p(consume path, method, params)
-    end
-    error
+class _Tree
+  let prefix: Array[_Chunk]
+  let children: Array[_Tree]
+  let leaf: (_Wild | _Edge | None)
 
-class _Edge
-  let _methods: Array[String]
-  let _hg: _HandlerGroup
+  new create(chunks: Array[_Chunk], hg: _HandleGroup) =>
 
-  new create(methods: Array[String], hg: _HandlerGroup) =>
-    _methods = methods
-    _hg = hg
-
-  fun apply(path: String iso, method: String, params: Map[String, String]):
-    _HandlerGroup ?
-  =>
-    if _methods.contains(method) then
-      _hg
-    else
-      error
-    end
-
-class _Leaf
-  let prefix: String
-  let _methods: Array[String]
-  let _hg: _HandlerGroup
-
-  new create(prefix': String, methods': Array[String], hg': _HandlerGroup) =>
-    prefix = prefix'
-    _methods = methods'
-    _hg = hg'
-
-  fun apply(path: String iso, method: String, params: Map[String, String]):
-    _HandlerGroup ?
-  =>
-    if _methods.contains(method) then
-      _hg
-    else
-      error
-    end
-
-class _Wild
-  let _name: String
-  let _methods: Array[String]
-  let _hg: _HandlerGroup
-
-  new create(name: String, methods: Array[String], hg: _HandlerGroup) =>
-    _name = name
-    _methods = methods
-    _hg = hg
-
-  fun apply(path: String iso, method: String, params: Map[String, String]):
-    _HandlerGroup ?
-  =>
-    if _methods.contains(method) then
-      params(_name) = path.substring(1)
-      _hg
-    else
-      error
-    end
