@@ -48,7 +48,7 @@ class _RadixMux
     (hg, params)
 
 class _Node
-  let preifx: String
+  let prefix: String
   let _children: Array[_Node] = Array[_Node]
   let _leaves: Array[_Leaf] = Array[_Leaf]
   let _param: (_Param | None) = None
@@ -56,7 +56,7 @@ class _Node
   let _edge: (_Edge | None) = None
 
   new create(prefix': String) =>
-    preifx = prefix'
+    prefix = prefix'
 
   fun update(path: String iso, hg: _HandlerGroup) =>
     // TODO
@@ -86,9 +86,9 @@ class _Param
   fun ref apply(path: String iso, method: String, params: Map[String, String]):
     _HandlerGroup ?
   =>
-    let p = path.substring(0, path.find("/"))
-    path.delete(0, p.size())
-    params(_name) = consume p
+    let s = path.substring(0, path.find("/"))
+    path.delete(0, s.size())
+    params(_name) = consume s
 
     // Short circuit for edge
     if (path.size() == 0) then
@@ -99,7 +99,23 @@ class _Param
       end
     end
 
-    // TODO
+    let next = path(0)
+    for c in _children.values() do
+      if c.prefix(0) == next then
+        return c(consume path, method, params)
+      end
+    end
+    for l in _leaves.values() do
+      if l.prefix(0) == next then
+        return l(consume path, method, params)
+      end
+    end
+    match _wild
+    | let w: _Wild => return w(consume path, method, params)
+    end
+    match _param
+    | let p: _Param => return p(consume path, method, params)
+    end
     error
 
 class _Edge
