@@ -40,7 +40,7 @@ class _RadixMux
     // TODO
     None
 
-  fun apply(req: Payload): (_HandlerGroup, Map[String, String]) ? =>
+  fun ref apply(req: Payload): (_HandlerGroup, Map[String, String]) ? =>
     var path = recover iso req.url.path.clone() end
     let method = req.method
     let params = Map[String, String]
@@ -49,11 +49,11 @@ class _RadixMux
 
 class _Node
   let prefix: String
+  let _edge: (_Edge | None) = None
   let _children: Array[_Node] = Array[_Node]
   let _leaves: Array[_Leaf] = Array[_Leaf]
-  let _param: (_Param | None) = None
   let _wild: (_Wild | None) = None
-  let _edge: (_Edge | None) = None
+  let _param: (_Param | None) = None
 
   new create(prefix': String) =>
     prefix = prefix'
@@ -62,19 +62,50 @@ class _Node
     // TODO
     None
 
-  fun apply(path: String iso, method: String, params: Map[String, String]):
+  fun ref apply(path: String iso, method: String, params: Map[String, String]):
     _HandlerGroup ?
   =>
-    // TODO
+    if path.substring(0, prefix.size().isize()) == prefix then
+      path.delete(0, prefix.size())
+    else
+      error
+    end
+
+    // Short circuit for edge
+    if (path.size() == 0) then
+      match _edge
+      | let e: _Edge => return e(consume path, method, params)
+      else
+        error
+      end
+    end
+
+    let next = path(0)
+    for c in _children.values() do
+      if c.prefix(0) == next then
+        return c(consume path, method, params)
+      end
+    end
+    for l in _leaves.values() do
+      if l.prefix(0) == next then
+        return l(consume path, method, params)
+      end
+    end
+    match _wild
+    | let w: _Wild => return w(consume path, method, params)
+    end
+    match _param
+    | let p: _Param => return p(consume path, method, params)
+    end
     error
 
 class _Param
   let _name: String
+  let _edge: (_Edge | None) = None
   let _children: Array[_Node] = Array[_Node]
   let _leaves: Array[_Leaf] = Array[_Leaf]
-  let _param: (_Param | None) = None
   let _wild: (_Wild | None) = None
-  let _edge: (_Edge | None) = None
+  let _param: (_Param | None) = None
 
   new create(name: String) =>
     _name = name
