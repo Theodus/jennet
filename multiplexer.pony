@@ -27,82 +27,133 @@ class val _Multiplexer
       hg(Context(_responder, consume params), consume req)
     end
 
-/*
 // TODO Radix Mux
 // TODO docs
 
-trait _RMNode
-  fun update(path: String, hg: _HandlerGroup)
-  fun apply(path: String, method: String, params: Map[String, String]):
-    _HandlerGroup ?
+class _RadixMux
+  let root: _Node
 
-trait _RMLeaf
-  fun apply(path: String, method: String, params: Map[String, String]):
-    _HandlerGroup ?
-
-class _Node is _RMNode
-  let _preifx: String
-  let _children: Array[_RMNode]
-  let _leaves: Array[_RMLeaf]
+  new create() =>
+    root = _Node("/")
 
   fun update(path: String, hg: _HandlerGroup) =>
     // TODO
     None
 
-  fun apply(path: String, method: String, params: Map[String, String]):
-    _HandlerGroup ?
-  =>
+  fun apply(req: Payload): (_HandlerGroup, Map[String, String]) ? =>
+    var path = recover iso req.url.path.clone() end
+    let method = req.method
+    let params = Map[String, String]
+    let hg = root(consume path, method, params)
+    (hg, params)
+
+class _Node
+  let preifx: String
+  let _children: Array[_Node] = Array[_Node]
+  let _leaves: Array[_Leaf] = Array[_Leaf]
+  let _param: (_Param | None) = None
+  let _wild: (_Wild | None) = None
+  let _edge: (_Edge | None) = None
+
+  new create(prefix': String) =>
+    preifx = prefix'
+
+  fun update(path: String iso, hg: _HandlerGroup) =>
     // TODO
     None
 
-class _Param is _RMNode
+  fun apply(path: String iso, method: String, params: Map[String, String]):
+    _HandlerGroup ?
+  =>
+    // TODO
+    error
+
+class _Param
   let _name: String
-  let _children: Array[_RMNode]
+  let _children: Array[_Node] = Array[_Node]
+  let _leaves: Array[_Leaf] = Array[_Leaf]
+  let _param: (_Param | None) = None
+  let _wild: (_Wild | None) = None
+  let _edge: (_Edge | None) = None
 
-  fun update(path: String, hg: _HandlerGroup) =>
+  new create(name: String) =>
+    _name = name
+
+  fun update(path: String iso, hg: _HandlerGroup) =>
     // TODO
     None
 
-  fun apply(path: String, method: String, params: Map[String, String]):
+  fun ref apply(path: String iso, method: String, params: Map[String, String]):
     _HandlerGroup ?
   =>
-    // TODO
-    None
+    let p = path.substring(0, path.find("/"))
+    path.delete(0, p.size())
+    params(_name) = consume p
 
-class _Edge is _RMLeaf
+    // Short circuit for edge
+    if (path.size() == 0) then
+      match _edge
+      | let e: _Edge => return e(consume path, method, params)
+      else
+        error
+      end
+    end
+
+    // TODO
+    error
+
+class _Edge
+  let _methods: Array[String]
   let _hg: _HandlerGroup
-  let _method: String
 
-  fun apply(path: String, method: String, params: Map[String, String]):
+  new create(methods: Array[String], hg: _HandlerGroup) =>
+    _methods = methods
+    _hg = hg
+
+  fun apply(path: String iso, method: String, params: Map[String, String]):
     _HandlerGroup ?
   =>
-    if method == _method then
+    if _methods.contains(method) then
       _hg
     else
       error
     end
 
-class _Leaf is _RMLeaf
-  let _prefix: String
-  let _method: String
+class _Leaf
+  let prefix: String
+  let _methods: Array[String]
   let _hg: _HandlerGroup
 
-  fun apply(path: String, method: String, params: Map[String, String]):
+  new create(prefix': String, methods': Array[String], hg': _HandlerGroup) =>
+    prefix = prefix'
+    _methods = methods'
+    _hg = hg'
+
+  fun apply(path: String iso, method: String, params: Map[String, String]):
     _HandlerGroup ?
   =>
-    if method == _method then
+    if _methods.contains(method) then
       _hg
     else
       error
     end
 
-class _Wild is _RMLeaf
+class _Wild
   let _name: String
+  let _methods: Array[String]
   let _hg: _HandlerGroup
 
-  fun apply(path: String, method: String, params: Map[String, String]):
+  new create(name: String, methods: Array[String], hg: _HandlerGroup) =>
+    _name = name
+    _methods = methods
+    _hg = hg
+
+  fun apply(path: String iso, method: String, params: Map[String, String]):
     _HandlerGroup ?
   =>
-    // TODO
-    None
-*/
+    if _methods.contains(method) then
+      params(_name) = path.substring(1)
+      _hg
+    else
+      error
+    end
