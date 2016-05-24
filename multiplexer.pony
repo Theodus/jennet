@@ -31,38 +31,46 @@ class val _Multiplexer
 // TODO mux tests
 // TODO docs (readme explanation)
 
-class _Multiplexer1 // TODO replace other mux
+class iso _Multiplexer1 // TODO replace other mux
   let _trees: Map[String, _Tree]
 
-  fun add(route: _Route) ? =>
-    let path = route.path
+  new create() =>
+    _trees = Map[String, _Tree]
+
+  fun ref add(route: _Route) ? =>
+    let path = route.path.clone()
     if path(path.size() - 1) != '/' then
       path.append("/")
     end
     let method = route.method
     let hg = _HandlerGroup(route.middlewares, route.handler)
+    let chunks = chunk(consume path)
     if _trees.contains(method) then
-      let chunks = chunk(path)
       _trees(method).add(chunks, hg)
     else
       _trees(method) = _Tree(chunks, hg)
     end
 
-  fun apply(req: Payload) ? =>
+  fun apply(req: Payload): (_HandlerGroup, Map[String, String]) ? =>
     let tree = _trees(req.method)
     let chunks = chunk(req.url.path)
-    tree(chunks)
+    let params = Map[String, String]
+    let hg = tree(chunks, params)
+    (hg, params)
 
   fun chunk(path: String): Array[_Chunk] ? =>
-    let ss = path.split("/")
+    let ss = recover ref (consume path).split("/") end
     let cs = Array[_Chunk](ss.size())
     for (i, s) in ss.pairs() do
       if i == (ss.size() - 1) then
         match s
         | "" => cs.push(_Edge)
-        else // TODO correct // ?
+        else
+          // TODO correct "//" ?
           if s(0) == '*' then
             cs.push(_Wild(s.substring(1)))
+          else
+            error
           end
         end
       else
@@ -97,5 +105,23 @@ class _Tree
   let children: Array[_Tree]
   let leaf: (_Wild | _Edge | None)
 
-  new create(chunks: Array[_Chunk], hg: _HandleGroup) =>
+  new create(chunks: Array[_Chunk], hg: _HandlerGroup) ? =>
+    let last = chunks.size() - 1
+    prefix = chunks.slice(0, last - 1)
+    children = Array[_Tree]
+    leaf = match chunks(last)
+    | let w: _Wild => w
+    | let e: _Edge => e
+    else
+      error
+    end
 
+  fun ref add(chunks: Array[_Chunk], hg: _HandlerGroup) ? =>
+    // TODO
+    error
+
+  fun apply(chunks: Array[_Chunk], params: Map[String, String]):
+    _HandlerGroup ?
+  =>
+    // TODO
+    error
