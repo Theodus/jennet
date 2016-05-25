@@ -62,7 +62,7 @@ class iso RouteBuilder
     """
     let nf = _not_found
     let r = _responder
-    let mux = _Multiplexer((consume this)._routes, nf, r)
+    let mux = _BadMultiplexer((consume this)._routes, nf, r)
     Router(mux)
 
 class _DefaultNotFound is Handler

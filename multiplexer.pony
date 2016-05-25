@@ -1,7 +1,7 @@
 use "collections"
 use "net/http"
 
-class val _Multiplexer
+class val _BadMultiplexer
   let _routes: Map[String, _HandlerGroup]
   let _notfound: _HandlerGroup
   let _responder: Responder
@@ -31,7 +31,7 @@ class val _Multiplexer
 // TODO mux tests
 // TODO docs (readme explanation)
 
-class iso _Multiplexer1 // TODO replace other mux
+class iso _Multiplexer // TODO replace other mux
   let _trees: Map[String, _Tree]
 
   new create() =>
@@ -43,134 +43,85 @@ class iso _Multiplexer1 // TODO replace other mux
     if path(0) == '/' then path.shift() end
     // add last /
     if path(path.size() - 1) != '/' then path.append("/") end
+    path.append("#")
     let method = route.method
     let hg = _HandlerGroup(route.middlewares, route.handler)
-    let chunks = chunk(consume path)
     if _trees.contains(method) then
-      _trees(method).add(chunks, hg)
+      _trees(method).add(path.split("/"), hg)
     else
-      _trees(method) = _Tree(chunks, hg)
+      _trees(method) = _Tree(path.split("/"), hg)
     end
 
   fun apply(req: Payload): (_HandlerGroup, Map[String, String]) ? =>
     let tree = _trees(req.method)
-    let p = req.url.path.clone()
+    let path = req.url.path.clone()
     // remove first /
-    if p(0) == '/' then p.shift() end
+    if path(0) == '/' then path.shift() end
     // add last /
-    if p(p.size() - 1) != '/' then p.append("/") end
-    let path = recover ref p.split("/") end
+    if path(path.size() - 1) != '/' then path.append("/") end
+    path.append("#")
     let params = Map[String, String]
-    let hg = tree(path, params)
+    let hg = tree(path.split("/"), params)
     (hg, params)
 
-  fun chunk(path: String): Array[_Chunk] ? =>
-    let ss = recover ref (consume path).split("/") end
-    let cs = Array[_Chunk](ss.size())
-    for (i, s) in ss.pairs() do
-      if i == (ss.size() - 1) then
-        match s
-        | "" => cs.push(_Edge)
-        else
-          // TODO correct "//" ?
-          if s(0) == '*' then
-            cs.push(_Wild(s.substring(1)))
-          else
-            error
-          end
-        end
-      else
-        match s(0)
-        | ':' =>
-          cs.push(_Param(s.substring(1)))
-        else
-          cs.push(s)
-        end
+class _Tree
+  let prefix: Array[String]
+  let hg: (_HandlerGroup | None)
+  let children: Array[_Tree] = Array[_Tree]
+  var weight: USize
+
+  new create(prefix': Array[String], hg': (_HandlerGroup | None) = None) =>
+    prefix = prefix'
+    hg = hg'
+    weight = if hg' is None then 0 else 1 end
+
+  fun ref add_child(t: _Tree) =>
+    children.push(t)
+    weight = weight + 1
+
+  fun ref reorder() ? =>
+    var j: USize = 1
+    while j < children.size() do
+      let k = children(j)
+      var i = j - 1
+      while (i >= 0) and (children(i).weight > k.weight) do
+        children(i + 1) = children(i)
+        i = i - 1
+      end
+      children(i + 1) = k
+      j = j + 1
+    end
+    // give param lowest priority
+    for (i, c) in children.pairs() do
+      match c.prefix(0)(0)
+      | ':' =>
+        children.delete(i)
+        children.push(c)
+        break
       end
     end
-    cs
 
-type _Chunk is (String | _Param | _Wild | _Edge)
-
-class val _Param
-  let name: String
-
-  new val create(name': String) =>
-    name = name'
-
-class val _Wild
-  let name: String
-
-  new val create(name': String) =>
-    name = name'
-
-primitive _Edge
-
-/* wightning children
-    - param comes last
-    - there may only be one param
-    - the rest are ordered from greatest to least weight
-*/ // TODO remove when done
-
-class _Tree
-  let prefix: Array[_Chunk]
-  let wight: USize = 1
-  let children: Array[_Tree]
-  let leaf: (_Wild | _Edge | None)
-  let hg: _HandlerGroup
-
-  new create(chunks: Array[_Chunk], hg': _HandlerGroup) ? =>
-    let last = chunks.size() - 1
-    prefix = chunks.slice(0, last - 1)
-    children = Array[_Tree]
-    leaf = match chunks(last)
-    | let w: _Wild => w
-    | let e: _Edge => e
-    else
-      error
+  fun apply(path: Array[String], params: Map[String, String]): _HandlerGroup ?
+  =>
+    for (i, pth) in path.pairs() do
+      let pfx = prefix(i)
+      match pfx(0)
+      | ':' =>
+        params(pfx.substring(1)) = pth
+      | '*' =>
+        params(pfx.substring(1)) = pth
+      | '#' =>
+        return hg as _HandlerGroup
+      else
+        if pfx != pth then error end
+      end
     end
-    hg = hg'
-
-  fun ref add(chunks: Array[_Chunk], hg': _HandlerGroup) ? =>
-    // TODO
+    for c in children.values() do
+      // TODO
+      None
+    end
     error
 
-  fun apply(path: Array[String], params: Map[String, String]):
-    _HandlerGroup ?
-  =>
-    for (i, c) in prefix.pairs() do
-      match c
-      | let param: _Param =>
-        params(param.name) = path(i)
-      end
-    end
-
-    let path' = path.slice(prefix.size() - 1)
-    let p = path'(0)
-    if path'.size() == 1 then
-      match leaf
-      | let w: _Wild =>
-        params(w.name) = p
-        return hg
-      | _Edge =>
-        if p == "" then
-          return hg
-        else
-          error
-        end
-      else
-        error
-      end
-    else
-      for c in children.values() do
-        match c.prefix(0)
-        | let s: String =>
-          if p == s then
-            c(path', params)
-          end
-        else
-          c(path', params)
-        end
-      end
-    end
+  fun ref add(path: Array[String], hg': _HandlerGroup) ? =>
+    // TODO
     error
