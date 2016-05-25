@@ -75,6 +75,8 @@ class _Tree
     hg = hg'
     weight = if hg' is None then 0 else 1 end
 
+  fun first_is_param(): Bool => try prefix(0)(0) == ':' else false end
+
   fun ref add_child(t: _Tree) =>
     children.push(t)
     weight = weight + 1
@@ -93,8 +95,7 @@ class _Tree
     end
     // give param lowest priority
     for (i, c) in children.pairs() do
-      match c.prefix(0)(0)
-      | ':' =>
+      if c.first_is_param() then
         children.delete(i)
         children.push(c)
         break
@@ -116,12 +117,20 @@ class _Tree
         if pfx != pth then error end
       end
     end
+    let path' = path.slice(prefix.size() - 1)
     for c in children.values() do
-      // TODO
-      None
+      if (c.prefix(0) == path'(0)) or (c.first_is_param()) then
+        return c(path', params)
+      end
     end
     error
 
   fun ref add(path: Array[String], hg': _HandlerGroup) ? =>
-    // TODO
+    /*
+    for (i, pfx) in prefix.pairs() do
+      let pth = path(i)
+      if pfx != pth then
+
+
+    */
     error
