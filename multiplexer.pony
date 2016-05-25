@@ -67,13 +67,19 @@ class iso _Multiplexer // TODO replace other mux
 class _Tree
   let prefix: Array[String]
   let hg: (_HandlerGroup | None)
-  let children: Array[_Tree] = Array[_Tree]
+  let children: Array[_Tree]
   var weight: USize
 
-  new create(prefix': Array[String], hg': (_HandlerGroup | None) = None) =>
+  new create(prefix': Array[String], hg': (_HandlerGroup | None) = None,
+    children': Array[_Tree] = Array[_Tree], weight': (USize | None) = None) =>
     prefix = prefix'
     hg = hg'
-    weight = if hg' is None then 0 else 1 end
+    children = children'
+    weight = match weight'
+    | let w: USize => w
+    else
+      if hg' is None then 0 else 1 end
+    end
 
   fun first_is_param(): Bool => try prefix(0)(0) == ':' else false end
 
@@ -125,12 +131,27 @@ class _Tree
     end
     error
 
-  fun ref add(path: Array[String], hg': _HandlerGroup) ? =>
-    /*
+  fun ref add(path: Array[String], hg': _HandlerGroup): _Tree ? =>
     for (i, pfx) in prefix.pairs() do
       let pth = path(i)
       if pfx != pth then
+        let n1 = create(prefix.slice(0, i))
+        let n2 = create(path.slice(i), hg')
+        let n3 = create(prefix.slice(i), hg, children, weight)
+        n1.add_child(n2)
+        n1.add_child(n3)
+        n1.reorder()
+        return n1
+      end
+    end
 
+    let path' = path.slice(prefix.size() - 1)
 
-    */
-    error
+    for (i, c) in children.pairs() do
+      let pth = path(i)
+      // TODO add to child
+    end
+
+    add_child(create(path', hg'))
+    reorder()
+    this
