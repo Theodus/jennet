@@ -14,13 +14,13 @@ class iso Context
     _params = consume params'
     _data = Map[String, Any val]
 
-  fun val param(key: String): String val ? =>
+  fun ref param(key: String): String val ? =>
     """
     Get the URL parameter corresponding to key.
     """
     _params(key)
 
-  fun val get(key: String): Any val ? =>
+  fun ref get(key: String): Any val ? =>
     """
     Get the data corresponding to key.
     """

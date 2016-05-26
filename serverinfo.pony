@@ -1,6 +1,6 @@
 use "net/http"
 
-class ServerInfo is ServerNotify
+class _ServerInfo is ServerNotify
     let _out: OutStream
 
     new iso create(out: OutStream) =>

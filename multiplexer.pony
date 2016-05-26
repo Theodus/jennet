@@ -1,8 +1,7 @@
 use "collections"
 use "net/http"
 
-// TODO mux tests
-// TODO docs (readme explanation)
+// TODO wild
 
 class iso _Multiplexer
   let _methods: Map[String, _Node]
