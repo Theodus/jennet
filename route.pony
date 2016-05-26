@@ -2,13 +2,10 @@
 class val _Route
   let method: String
   let path: String
-  let handler: Handler
-  let middlewares: Middlewares
+  let hg: _HandlerGroup
 
-  new val create(method': String, path': String, handler': Handler,
-    middlewares': Middlewares)
+  new val create(method': String, path': String, hg': _HandlerGroup)
   =>
     method = method'
     path = path'
-    handler = handler'
-    middlewares = middlewares'
+    hg = hg'

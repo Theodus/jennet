@@ -4,10 +4,10 @@ class val Router
   """
   Routes incomming requests to the corresponding middlewares and handler.
   """
-  var _mux: _BadMultiplexer
+  var _mux: _Multiplexer
 
-  new val create(mux: _BadMultiplexer) =>
-    _mux = mux
+  new val create(mux: _Multiplexer) =>
+    _mux = consume mux
 
   fun val apply(request: Payload) =>
     _mux(consume request)
