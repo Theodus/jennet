@@ -1,4 +1,5 @@
 use "ponytest"
+use "collections"
 use "net/http"
 
 actor Main is TestList
@@ -12,8 +13,28 @@ class iso _TestMultiplexer is UnitTest
   fun name(): String => "_Multiplexer"
 
   fun apply(h: TestHelper) ? =>
+    let ts = _TestStream
+
+    let path0 = "/"
+    let h0 = _TestHandler(0, ts)
+    let path1 = "/foo"
+    let hg1 = _HandlerGroup(_TestHandler(1, ts))
+    let path2 = "/foo/"
+    let hg2 = _HandlerGroup(_TestHandler(2, ts))
+    let path3 = "/:foo/"
+    let hg3 = _HandlerGroup(_TestHandler(3, ts))
+    let path4 = "/:foo/bar/baz"
+    let hg4 = _HandlerGroup(_TestHandler(4, ts))
+    let path5 = "/foo/bar"
+    let hg5 = _HandlerGroup(_TestHandler(5, ts))
+
+    let rb = RouteBuilder(ts)
+    rb.get(path0, h0)
+    let router = (consume rb).build()
+    router(Payload.request("GET", URL.build(path0)))
     // TODO
-    error
+    let params = Map[String, String]
+    //h.assert_eq[(_HandlerGroup, Map[String, String])]((hg0, params), t)
 
 class val _TestHandler is Handler
   let _id: USize
@@ -47,5 +68,3 @@ actor _TestStream is OutStream
     for bs in data.values() do
       _data.append(bs)
     end
-
-  fun ref str(): String ref => _data

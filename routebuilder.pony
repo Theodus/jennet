@@ -53,17 +53,18 @@ class iso RouteBuilder
     end
     for m in _base_middlewares.values() do ms.push(m) end
     for m in middlewares.values() do ms.push(m) end
-    let route = _Route(method, path, handler, consume ms)
+    let hg = _HandlerGroup(handler, consume ms)
+    let route = _Route(method, path, hg)
     _routes.push(route)
 
-  fun iso build(): Router =>
+  fun iso build(): Router ? =>
     """
     Create a router using the predefined routes.
     """
     let nf = _not_found
     let r = _responder
-    let mux = _BadMultiplexer((consume this)._routes, nf, r)
-    Router(mux)
+    let mux = _Multiplexer((consume this)._routes, r, _HandlerGroup(nf))
+    Router(consume mux)
 
 class _DefaultNotFound is Handler
   fun val apply(c: Context, req: Payload): Context iso^ =>
