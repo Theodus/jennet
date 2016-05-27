@@ -9,12 +9,11 @@ actor Main
       env.out.print("unable to use network.")
       return
     end
-    let rb = RouteBuilder(env.out)
-    rb.serve_file(auth, "/", "/index.html")
-    let router = try
-      (consume rb).build()
+    let jennet = Jennet(auth, env.out, "8080")
+    jennet.serve_file(auth, "/", "/index.html")
+    try
+      (consume jennet).serve()
     else
       env.out.print("invalid routes.")
       return
     end
-    Jennet(auth, env.out, consume router, "8080")

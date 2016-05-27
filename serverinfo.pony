@@ -1,4 +1,5 @@
 use "net/http"
+use "promises"
 
 class _ServerInfo is ServerNotify
     let _out: OutStream

@@ -8,11 +8,15 @@ class iso Context
   let _responder: Responder
   let _params: Map[String, String]
   let _data: Map[String, Any val]
+  let _host: String
 
-  new iso create(responder': Responder, params': Map[String, String] iso) =>
+  new iso create(responder': Responder, params': Map[String, String] iso,
+    host': String)
+  =>
     _responder = responder'
     _params = consume params'
     _data = Map[String, Any val]
+    _host = host'
 
   fun ref param(key: String): String val ? =>
     """
@@ -43,4 +47,4 @@ class iso Context
     else
       "-----"
     end
-    _responder(consume req, consume res, response_time)
+    _responder(consume req, consume res, response_time, _host)
