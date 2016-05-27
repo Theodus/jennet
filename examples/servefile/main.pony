@@ -1,5 +1,5 @@
 use "net/http"
-use ".."
+use "../.."
 
 actor Main
   new create(env: Env) =>
