@@ -10,7 +10,7 @@ actor Main
       return
     end
     let jennet = Jennet(auth, env.out, "8080")
-    jennet.get("/", H)
+    jennet.get("/:name", H)
     try
       (consume jennet).serve()
     else
@@ -21,6 +21,9 @@ actor Main
 class H is Handler
   fun val apply(c: Context, req: Payload): Context iso^ =>
     let res = Payload.response()
-    res.add_chunk("Hello!")
+    let name = try c.param("name") as String else "" end
+    res.add_chunk("Hello")
+    if name != "" then res.add_chunk(" " + name) end
+    res.add_chunk("!")
     c.respond(consume req, consume res)
     consume c

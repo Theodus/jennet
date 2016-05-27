@@ -50,7 +50,11 @@ class _Node
       for i in Range[USize](0, pfx.size()) do
         try
           if pfx(i) == ':' then
-            let ns = pfx.find("/", i.isize())
+            let ns = try
+              pfx.find("/", i.isize())
+            else
+              pfx.size().isize()
+            end
             _params(i) = pfx.substring(i.isize() + 1, ns)
             pfx.delete(i.isize() + 1, ns.usize())
           end
@@ -60,7 +64,6 @@ class _Node
     prefix = consume pfx
 
   fun ref add(path: String iso, hg: _HandlerGroup): _Node ? =>
-    // search for edge in prefix
     if path.size() < prefix.size() then
       let n1 = create(consume path, hg, _params)
       n1.add_child(this)
@@ -136,17 +139,26 @@ class _Node
     fun apply(path: String, params: Map[String, String] iso):
       (_HandlerGroup, Map[String, String] iso^) ?
     =>
+      var path' = path
       for i in Range[ISize](0, prefix.size().isize()) do
         if prefix(i.usize()) == ':' then
           // store params
-          params(_params(i.usize())) = path.substring(i, path.find("/", i))
-        elseif prefix(i.usize()) != path(i.usize()) then
+          let ns = try
+            path'.find("/", i.isize())
+          else
+            path'.size().isize()
+          end
+          let value = path'.substring(i, ns)
+          if value == "" then error end
+          params(_params(i.usize())) = consume value
+          path' = path'.cut(i.isize(), ns)
+        elseif prefix(i.usize()) != path'(i.usize()) then
           // not found
           error
         end
       end
 
-      let remaining = path.substring(prefix.size().isize())
+      let remaining = path'.substring(prefix.size().isize())
       // check for edge
       if remaining == "" then
         return (_hg as _HandlerGroup, consume params)
