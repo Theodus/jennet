@@ -1,24 +1,33 @@
 use "net/http"
+use "collections"
 
-class val Router
-  """
-  Routes incomming requests to the corresponding middlewares and handler.
-  """
-  var _mux: _Multiplexer
+class _Router
+  let _mux: _Multiplexer
+  let _responder: Responder
+  let _notfound: _HandlerGroup
+  let _host: String
 
-  new val create(mux: _Multiplexer) =>
+  new val create(mux: _Multiplexer, responder: Responder,
+    notfound: _HandlerGroup, host: String)
+  =>
     _mux = consume mux
+    _responder = responder
+    _notfound = notfound
+    _host = host
 
   fun val apply(request: Payload) =>
-    _mux(consume request)
+    (let hg, let c) = try
+      (let hg, let params) = _mux(request.method, request.url.path)
+      let c = Context(_responder, consume params, _host)
+      (hg, consume c)
+    else
+      (_notfound, Context(_responder, recover Map[String, String] end, _host))
+    end
+    try
+      hg(consume c, consume request)
+    end
 
-// TODO middleware callbacks rather than chains?
-
-interface val Middleware
-  fun val apply(c: Context, req: Payload): (Context iso^, Payload iso^) ?
-  fun val after(c: Context): Context iso^
-
-interface val Handler
-  fun val apply(c: Context, req: Payload): Context iso^ ?
-
-type Middlewares is Array[Middleware] val
+class _Unavailable
+  fun val apply(request: Payload) =>
+    let res = Payload.response(503, "Service Unavailable")
+    (consume request).respond(consume res)

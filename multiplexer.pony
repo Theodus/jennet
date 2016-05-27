@@ -5,16 +5,10 @@ use "net/http"
 
 class iso _Multiplexer
   let _methods: Map[String, _Node]
-  let _responder: Responder
-  let _notfound: _HandlerGroup
 
-  new iso create(routes: Array[_Route] iso, responder: Responder,
-    notfound: _HandlerGroup) ?
-  =>
-    _responder = responder
-    _notfound = notfound
+  new iso create(routes: Array[_Route] val) ? =>
     _methods = Map[String, _Node]
-    for r in (consume routes).values() do
+    for r in routes.values() do
       let method = r.method
       let hg = _HandlerGroup(r.hg.handler, r.hg.middlewares)
       if _methods.contains(method) then
@@ -24,29 +18,18 @@ class iso _Multiplexer
       end
     end
 
-  fun val apply(req: Payload) =>
-    (let gh, let c) = try
-      let req_path = req.url.string()
-      var path = if req_path(0) != '/' then
-        let p = recover String(req_path.size() + 1) end
-        p.append("/")
-        p.append(consume req_path)
-        consume p
-      else
-        consume req_path
-      end
-
-      let n = _methods(req.method)
-      (let gh', let params) = n(consume path, recover Map[String, String] end)
-      let c' = Context(_responder, consume params)
-      (gh', consume c')
+  fun val apply(method: String, path: String):
+    (_HandlerGroup, Map[String, String] iso^) ? =>
+    let path' = if path(0) != '/' then
+      let p = recover String(path.size() + 1) end
+      p.append("/")
+      p.append(consume path)
+      consume p
     else
-      let c = Context(_responder, recover Map[String, String] end)
-      (_notfound, consume c)
+      consume path
     end
-    try
-      gh(consume c, consume req)
-    end
+    let n = _methods(method)
+    n(consume path', recover Map[String, String] end)
 
 class _Node
   let prefix: String

@@ -3,13 +3,11 @@ use "net/http"
 
 // TODO common log
 
-// TODO find out how to get IP address
-
 interface val Responder
   """
   Responds to the request and creates a log.
   """
-  fun val apply(req: Payload, res: Payload, response_time: String)
+  fun val apply(req: Payload, res: Payload, response_time: String, host: String)
 
 class DefaultResponder is Responder
   let _out: OutStream
@@ -17,11 +15,12 @@ class DefaultResponder is Responder
   new val create(out: OutStream) =>
     _out = out
 
-  fun val apply(req: Payload, res: Payload, response_time: String) =>
+  fun val apply(req: Payload, res: Payload, response_time: String, host: String)
+  =>
     let time = Date(Time.seconds()).format("%d/%b/%Y %H:%M:%S")
     let list = recover Array[String](17) end
     list.push("[")
-    list.push("Jennet")
+    list.push(host)
     list.push("] ")
     list.push(time)
     list.push(" |")
@@ -57,9 +56,9 @@ class CommonResponder is Responder
   new val create(out: OutStream) =>
     _out = out
 
-  fun val apply(req: Payload, res: Payload, response_time: String) =>
+  fun val apply(req: Payload, res: Payload, response_time: String, host: String)
+  =>
     let list = recover Array[String](24) end
-    let host = "Jennet"
     list.push(host)
     list.push(" - ")
     list.push(_entry(req.url.user))
