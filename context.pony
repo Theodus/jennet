@@ -1,5 +1,12 @@
+// Copyright 2016 Theodore Butler. All rights reserved.
+// Use of this source code is governed by an MIT style
+// license that can be found in the LICENSE file.
+
 use "collections"
 use "net/http"
+
+// TODO JSON integration
+// TODO Separate map in context for iso values?
 
 class iso Context
   """
