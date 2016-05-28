@@ -35,3 +35,14 @@ class _Unavailable
   fun val apply(request: Payload) =>
     let res = Payload.response(503, "Service Unavailable")
     (consume request).respond(consume res)
+
+class val _Route
+  let method: String
+  let path: String
+  let hg: _HandlerGroup
+
+  new val create(method': String, path': String, hg': _HandlerGroup)
+  =>
+    method = method'
+    path = path'
+    hg = hg'

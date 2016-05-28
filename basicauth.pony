@@ -7,6 +7,8 @@ use "collections"
 use "encode/base64"
 use "itertools"
 
+// TODO docs
+
 class BasicAuth is Middleware
   """
   Performs Basic Authentication as described in RFC 2617

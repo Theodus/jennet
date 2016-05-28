@@ -14,7 +14,7 @@ class iso Jennet
   let _out: OutStream
   let _auth: (AmbientAuth val | NetAuth val)
   let _responder: Responder
-  let _base_middlewares: Array[Middleware]
+  let _base_middlewares: Array[Middleware] = Array[Middleware]
   let _routes: Array[_Route] iso = recover Array[_Route] end
   let _notfound: _HandlerGroup = _HandlerGroup(_DefaultNotFound)
   var _host: String = "Jennet" // TODO get host from server
@@ -27,8 +27,6 @@ class iso Jennet
     _out = out
     _auth = auth
     _responder = DefaultResponder(out)
-    _base_middlewares = Array[Middleware](1)
-    _base_middlewares.push(ResponseTimer)
 
   // TODO custom default middleware
   // TODO other methods

@@ -5,8 +5,11 @@
 use "collections"
 use "net/http"
 
+// TODO docs
 // TODO JSON integration
 // TODO Separate map in context for iso values?
+
+use "time"
 
 class iso Context
   """
@@ -16,6 +19,7 @@ class iso Context
   let _params: Map[String, String]
   let _data: Map[String, Any val]
   let _host: String
+  let _start_time: U64
 
   new iso create(responder': Responder, params': Map[String, String] iso,
     host': String)
@@ -24,6 +28,7 @@ class iso Context
     _params = consume params'
     _data = Map[String, Any val]
     _host = host'
+    _start_time = Time.nanos()
 
   fun ref param(key: String): String val ? =>
     """
@@ -48,10 +53,23 @@ class iso Context
     """
     Respond to the given request with the response.
     """
-    let response_time = try
-      let st = _data("start_time") as U64
-      TimeFormat(st)
-    else
-      "-----"
-    end
+    let response_time = TimeFormat(_start_time, Time.nanos())
     _responder(consume req, consume res, response_time, _host)
+
+primitive TimeFormat
+  """
+  Formats the time difference between the current time and the start time so
+  that the correct units of time are logged.
+  """
+  fun apply(start_time: U64, end_time: U64): String =>
+    let time = (end_time - start_time).string()
+    let s = time.size()
+    if s < 4 then
+      time + "ns"
+    elseif s < 7 then
+      time.substring(0, s.isize() - 3) + "µs"
+    elseif s < 10 then
+      time.substring(0, s.isize() - 6) + "ms"
+    else
+      time.substring(0, s.isize() - 9) + "s"
+    end

@@ -5,8 +5,6 @@
 use "time"
 use "net/http"
 
-// TODO common log
-
 interface val Responder
   """
   Responds to the request and creates a log.
