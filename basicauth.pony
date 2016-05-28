@@ -3,8 +3,6 @@ use "collections"
 use "encode/base64"
 use "itertools"
 
-// TODO tests
-
 class BasicAuth is Middleware
   """
   Performs Basic Authentication as described in RFC 2617
@@ -13,7 +11,7 @@ class BasicAuth is Middleware
   let _accounts:Map[String, String] val
   let _max_un_size: USize
 
-  new val create(realm: String, accounts: Map[String, String] iso^) ? =>
+  new val create(realm: String, accounts: Map[String, String] val) ? =>
     _realm = realm
     var max_size = USize(0)
     for (u, p) in accounts.pairs() do
@@ -48,7 +46,6 @@ class BasicAuth is Middleware
   fun val after(c: Context): Context iso^ =>
     consume c
 
-  // TODO test
   fun val _constant_time_compare(v1: String, v2: String): Bool =>
     if v1.size() != v2.size() then false end
     var res = U8(0)

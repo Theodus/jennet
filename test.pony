@@ -1,6 +1,7 @@
 use "ponytest"
 use "net/http"
 use "collections"
+use "encode/base64"
 
 actor Main is TestList
   new create(env: Env) => PonyTest(env, this)
@@ -8,6 +9,7 @@ actor Main is TestList
 
   fun tag tests(test: PonyTest) =>
     test(_TestMultiplexer)
+    test(_TestBasicAuth)
 
 class iso _TestMultiplexer is UnitTest
   fun name(): String => "Multiplexer"
@@ -48,6 +50,39 @@ class iso _TestMultiplexer is UnitTest
     h.assert_eq[String]("5", (hg.handler as _TestHandler val).msg)
     h.assert_eq[String]("stuff", ps("foo"))
 
+class iso _TestBasicAuth is UnitTest
+  fun name(): String => "BasicAuth"
+
+  fun apply(h: TestHelper) ? =>
+    let mw = recover Array[Middleware](1) end
+    let accounts = recover val
+      let m = Map[String, String]
+      m("test_username") = "test_password"
+      m
+    end
+    mw.push(BasicAuth("test", accounts))
+    let hg = _HandlerGroup(_TestHandler("auth"), consume mw)
+
+    h.long_test(1_000_000_000)
+
+    let req1 = Payload.request("GET", URL.build("/"), _TestAuthResOK(h))
+    let auth1 = recover val Base64.encode("test_username:test_password") end
+    req1("Authorization") = "Basic " + auth1
+    hg(Context(DefaultResponder(h.env.out),
+      recover Map[String, String] end, "test"), consume req1)
+
+    let req2 = Payload.request("GET", URL.build("/"),
+      _TestAuthResUnauthorized(h))
+    let auth2 = recover val Base64.encode("bad_username:bad_password") end
+    req2("Authorization") = "Basic " + auth2
+    try
+      hg(Context(DefaultResponder(h.env.out),
+        recover Map[String, String] end, "test"), consume req2)
+    end
+
+    h.complete(true)
+
+
 class _TestHandler is Handler
   let msg: String
 
@@ -59,3 +94,21 @@ class _TestHandler is Handler
     res("msg") = msg
     c.respond(consume req, consume res)
     consume c
+
+class _TestAuthResOK is ResponseHandler
+  let h: TestHelper
+
+  new val create(h': TestHelper) =>
+    h = h'
+
+  fun val apply(request: Payload val, response: Payload val) =>
+    h.assert_eq[U16](200, response.status)
+
+class _TestAuthResUnauthorized is ResponseHandler
+  let h: TestHelper
+
+  new val create(h': TestHelper) =>
+    h = h'
+
+  fun val apply(request: Payload val, response: Payload val) =>
+    h.assert_eq[U16](401, response.status)
