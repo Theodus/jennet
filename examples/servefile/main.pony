@@ -15,5 +15,4 @@ actor Main
       (consume jennet).serve()
     else
       env.out.print("invalid routes.")
-      return
     end

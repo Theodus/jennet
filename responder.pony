@@ -44,7 +44,7 @@ class DefaultResponder is Responder
     list.push(esc)
     list.push("[0m| ")
     list.push(response_time)
-    list.push("| ")
+    list.push(" | ")
     list.push(req.method)
     list.push(" ")
     list.push(req.url.path)

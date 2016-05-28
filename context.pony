@@ -30,11 +30,16 @@ class iso Context
     _host = host'
     _start_time = Time.nanos()
 
-  fun ref param(key: String): String val ? =>
+  fun ref param(key: String): String val =>
     """
-    Get the URL parameter corresponding to key.
+    Get the URL parameter corresponding to key, return an empty String if not
+    found.
     """
-    _params(key)
+    try
+      _params(key)
+    else
+      ""
+    end
 
   fun ref get(key: String): Any val ? =>
     """

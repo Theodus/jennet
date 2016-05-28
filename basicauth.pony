@@ -17,11 +17,10 @@ class BasicAuth is Middleware
   let _accounts:Map[String, String] val
   let _max_un_size: USize
 
-  new val create(realm: String, accounts: Map[String, String] val) ? =>
+  new val create(realm: String, accounts: Map[String, String] val) =>
     _realm = realm
     var max_size = USize(0)
     for (u, p) in accounts.pairs() do
-      if (u == "") or (p == "") then error end
       if u.size() > max_size then max_size = u.size() end
     end
     _accounts = consume accounts
