@@ -71,7 +71,16 @@ class _Node
     end
     // search for branch in prefix
     for i in Range[USize](0, prefix.size()) do
-      if prefix(i) != path(i) then
+      if prefix(i) == ':' then
+        let ns = try
+          path.find("/", i.isize())
+        else
+          path.size().isize()
+        end
+        let value = path.substring(i.isize(), ns)
+        if value == "" then error end
+        path.delete(i.isize(), ns.usize())
+      elseif prefix(i) != path(i) then
         // seperate params
         let params0 = Map[USize, String]
         let params1 = Map[USize, String]
