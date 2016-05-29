@@ -14,9 +14,9 @@ class iso Jennet
   let _out: OutStream
   let _auth: (AmbientAuth val | NetAuth val)
   let _responder: Responder
-  let _base_middlewares: Array[Middleware] = Array[Middleware]
+  var _base_middlewares: Array[Middleware] val = recover Array[Middleware] end
   let _routes: Array[_Route] iso = recover Array[_Route] end
-  let _notfound: _HandlerGroup = _HandlerGroup(_DefaultNotFound)
+  var _notfound: _HandlerGroup = _HandlerGroup(_DefaultNotFound)
   var _host: String = "Jennet" // TODO get host from server
 
   new iso create(
@@ -28,18 +28,47 @@ class iso Jennet
     _auth = auth
     _responder = DefaultResponder(out)
 
-  // TODO custom default middleware
-  // TODO other methods
-  // TODO custom not_found
+  // TODO serve dir
 
   fun ref get(path: String, handler: Handler,
     middlewares: Array[Middleware] val = recover Array[Middleware] end)
   =>
     _add_route("GET", path, handler, middlewares)
 
+  fun ref post(path: String, handler: Handler,
+    middlewares: Array[Middleware] val = recover Array[Middleware] end)
+  =>
+    _add_route("POST", path, handler, middlewares)
+
+  fun ref put(path: String, handler: Handler,
+    middlewares: Array[Middleware] val = recover Array[Middleware] end)
+  =>
+    _add_route("PUT", path, handler, middlewares)
+
+  fun ref patch(path: String, handler: Handler,
+    middlewares: Array[Middleware] val = recover Array[Middleware] end)
+  =>
+    _add_route("PATCH", path, handler, middlewares)
+
+  fun ref delete(path: String, handler: Handler,
+    middlewares: Array[Middleware] val = recover Array[Middleware] end)
+  =>
+    _add_route("DELETE", path, handler, middlewares)
+
+  fun ref options(path: String, handler: Handler,
+    middlewares: Array[Middleware] val = recover Array[Middleware] end)
+  =>
+    _add_route("OPTIONS", path, handler, middlewares)
+
   fun ref serve_file(auth: AmbientAuth, path: String, filepath: String) =>
     _add_route("GET", path, _FileServer(auth, filepath),
     recover Array[Middleware] end)
+
+  fun ref not_found(handler: Handler) =>
+    _notfound = _HandlerGroup(handler)
+
+  fun ref base_middleware(mw: Array[Middleware] val) =>
+    _base_middlewares = mw
 
   fun val serve() ? =>
     let mux = _Multiplexer(_routes)
@@ -65,8 +94,6 @@ interface val Middleware
 
 interface val Handler
   fun val apply(c: Context, req: Payload): Context iso^ ?
-
-type Middlewares is Array[Middleware] val
 
 class _DefaultNotFound is Handler
   fun val apply(c: Context, req: Payload): Context iso^ =>

@@ -17,8 +17,12 @@ class _FileServer is Handler
     let caps = recover val FileCaps.set(FileRead).set(FileStat) end
     let res = try
       let r = Payload.response()
+      let cwd = Path.cwd()
+      let path = recover String(cwd.size() + _filepath.size()) end
+      path.append(cwd)
+      path.append(_filepath)
       with
-        file = OpenFile(FilePath(_auth, Path.cwd() + _filepath, caps)) as File
+        file = OpenFile(FilePath(_auth, consume path, caps)) as File
       do
         for line in file.lines() do
           r.add_chunk(line)

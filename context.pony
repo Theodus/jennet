@@ -5,7 +5,6 @@
 use "collections"
 use "net/http"
 
-// TODO docs
 // TODO JSON integration
 // TODO Separate map in context for iso values?
 

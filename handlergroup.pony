@@ -5,11 +5,11 @@
 use "net/http"
 
 class val _HandlerGroup
-  let middlewares: Middlewares
+  let middlewares: Array[Middleware] val
   let handler: Handler
 
   new val create(handler': Handler,
-    middlewares': Middlewares = recover Array[Middleware] end)
+    middlewares': Array[Middleware] val = recover Array[Middleware] end)
   =>
     middlewares = middlewares'
     handler = handler'
