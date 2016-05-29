@@ -26,6 +26,7 @@ class iso _TestMultiplexer is UnitTest
     ts.push(("/foo/bar/", _HandlerGroup(_TestHandler("3"))))
     ts.push(("/baz/bar", _HandlerGroup(_TestHandler("4"))))
     ts.push(("/:foo/baz", _HandlerGroup(_TestHandler("5"))))
+    ts.push(("/foo/bar/*baz", _HandlerGroup(_TestHandler("6"))))
     let tests = recover val consume ts end
     let routes = recover Array[_Route] end
     for (p, hg) in tests.values() do
@@ -53,6 +54,10 @@ class iso _TestMultiplexer is UnitTest
     (hg, ps) = mux("GET", "/stuff/baz")
     h.assert_eq[String]("5", (hg.handler as _TestHandler val).msg)
     h.assert_eq[String]("stuff", ps("foo"))
+
+    (hg, ps) = mux("GET", "/foo/bar/stuff/and/things")
+    h.assert_eq[String]("6", (hg.handler as _TestHandler val).msg)
+    h.assert_eq[String]("stuff/and/things", ps("baz"))
 
 class iso _TestBasicAuth is UnitTest
   fun name(): String => "BasicAuth"

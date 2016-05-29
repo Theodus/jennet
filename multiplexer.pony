@@ -5,7 +5,6 @@
 use "collections"
 use "net/http"
 
-// TODO wilds
 // TODO weight optimization
 // TODO path auto-correction
 
@@ -63,6 +62,9 @@ class _Node
             end
             _params(i) = pfx.substring(i.isize() + 1, ns)
             pfx.delete(i.isize() + 1, ns.usize())
+          elseif pfx(i) == '*' then
+            _params(i) = pfx.substring(i.isize() + 1)
+            pfx.delete(i.isize() + 1, pfx.size())
           end
         end
       end
@@ -75,7 +77,6 @@ class _Node
       n1.add_child(this)
       return n1
     end
-    // search for branch in prefix
     for i in Range[USize](0, prefix.size()) do
       if prefix(i) == ':' then
         let ns = try
@@ -86,8 +87,10 @@ class _Node
         let value = path.substring(i.isize(), ns)
         if value == "" then error end
         path.delete(i.isize(), ns.usize())
+      elseif prefix(i) == '*' then
+        path.delete(i.isize(), path.size())
       elseif prefix(i) != path(i) then
-        // seperate params
+        // branch in prefix
         let params0 = Map[USize, String]
         let params1 = Map[USize, String]
         for (k, v) in _params.pairs() do
@@ -124,7 +127,8 @@ class _Node
       end
     end
     // add child and reorder
-    _children.push(create(consume remaining, hg))
+    let c = create(consume remaining, hg)
+    _children.push(c)
     reorder()
     this
 
@@ -167,6 +171,9 @@ class _Node
           if value == "" then error end
           params(_params(i.usize())) = consume value
           path' = path'.cut(i.isize(), ns)
+        elseif prefix(i.usize()) == '*' then
+          params(_params(i.usize())) = path'.substring(i)
+          path' = path'.cut(i.isize(), path'.size().isize())
         elseif prefix(i.usize()) != path'(i.usize()) then
           // not found
           error
@@ -181,6 +188,7 @@ class _Node
       // pass on to child
       for c in _children.values() do
         match c.prefix(0)
+        | '*' => return c(consume remaining, consume params)
         | ':' => return c(consume remaining, consume params)
         | remaining(0) => return c(consume remaining, consume params)
         end

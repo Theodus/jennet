@@ -59,6 +59,15 @@ Path: /user/:username
  /user/                    no match
 ```
 
+There are also catch-all parameters that may be used at the end of a path:
+```
+Pattern: /src/*filepath
+
+ /src/                     match
+ /src/somefile.go          match
+ /src/subdir/somefile.go   match
+```
+
 The router uses a compact prefix tree algorithm (or [Radix Tree](https://en.wikipedia.org/wiki/Radix_tree)) since URL paths have a hierarchical structure and only make use of a limited set of characters (byte values). It is very likely that there are a lot of common prefixes, which allows us to easily match incoming URL paths.
 
 see also: [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter)
