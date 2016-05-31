@@ -6,9 +6,6 @@ use "net/http"
 use "net"
 use "collections"
 
-// TODO docs
-// TODO ambient auth required?
-
 class iso Jennet
   let _server: Server
   let _out: OutStream
@@ -31,34 +28,62 @@ class iso Jennet
   fun ref get(path: String, handler: Handler,
     middlewares: Array[Middleware] val = recover Array[Middleware] end)
   =>
+    """
+    Create a route for a GET method on the given URL path with the given handler
+    and middleware.
+    """
     _add_route("GET", path, handler, middlewares)
 
   fun ref post(path: String, handler: Handler,
     middlewares: Array[Middleware] val = recover Array[Middleware] end)
   =>
+    """
+    Create a route for a POST method on the given URL path with the given
+    handler and middleware.
+    """
     _add_route("POST", path, handler, middlewares)
 
   fun ref put(path: String, handler: Handler,
     middlewares: Array[Middleware] val = recover Array[Middleware] end)
   =>
+    """
+    Create a route for a PUT method on the given URL path with the given handler
+    and middleware.
+    """
     _add_route("PUT", path, handler, middlewares)
 
   fun ref patch(path: String, handler: Handler,
     middlewares: Array[Middleware] val = recover Array[Middleware] end)
   =>
+    """
+    Create a route for a PATCH method on the given URL path with the given
+    handler and middleware.
+    """
     _add_route("PATCH", path, handler, middlewares)
 
   fun ref delete(path: String, handler: Handler,
     middlewares: Array[Middleware] val = recover Array[Middleware] end)
   =>
+    """
+    Create a route for a DELETE method on the given URL path with the given
+    handler and middleware.
+    """
     _add_route("DELETE", path, handler, middlewares)
 
   fun ref options(path: String, handler: Handler,
     middlewares: Array[Middleware] val = recover Array[Middleware] end)
   =>
+    """
+    Create a route for an OPTIONS method on the given URL path with the given
+    handler and middleware.
+    """
     _add_route("OPTIONS", path, handler, middlewares)
 
   fun ref serve_file(auth: AmbientAuth, path: String, filepath: String) =>
+    """
+    Serve static file located at the relative filepath when GET requests are
+    recieved for the given path.
+    """
     _add_route("GET", path, _FileServer(auth, filepath),
       recover Array[Middleware] end)
 
@@ -72,12 +97,21 @@ class iso Jennet
       recover Array[Middleware] end)
 
   fun ref not_found(handler: Handler) =>
+    """
+    Replace the default Handler for NotFound responses.
+    """
     _notfound = _HandlerGroup(handler)
 
   fun ref base_middleware(mw: Array[Middleware] val) =>
+    """
+    Replace the middleware added to all routes.
+    """
     _base_middlewares = mw
 
   fun val serve() ? =>
+    """
+    Serve incomming HTTP requests.
+    """
     let mux = _Multiplexer(_routes)
     let router = _Router(consume mux, _responder, _notfound, _host)
     _server.set_handler(router)

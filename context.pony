@@ -5,7 +5,6 @@
 use "collections"
 use "net/http"
 
-// TODO JSON integration
 // TODO Separate map in context for iso values?
 
 use "time"
