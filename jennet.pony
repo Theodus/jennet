@@ -28,8 +28,6 @@ class iso Jennet
     _auth = auth
     _responder = DefaultResponder(out)
 
-  // TODO serve dir
-
   fun ref get(path: String, handler: Handler,
     middlewares: Array[Middleware] val = recover Array[Middleware] end)
   =>
@@ -62,7 +60,16 @@ class iso Jennet
 
   fun ref serve_file(auth: AmbientAuth, path: String, filepath: String) =>
     _add_route("GET", path, _FileServer(auth, filepath),
-    recover Array[Middleware] end)
+      recover Array[Middleware] end)
+
+  fun ref serve_dir(auth: AmbientAuth, path: String, dir: String) =>
+    """
+    Serve all files in dir using the incomming url path suffix denoted by
+    *filepath in the given path. path must be in the form of:
+    "/some_dir/*filepath".
+    """
+    _add_route("GET", path, _DirServer(auth, dir),
+      recover Array[Middleware] end)
 
   fun ref not_found(handler: Handler) =>
     _notfound = _HandlerGroup(handler)

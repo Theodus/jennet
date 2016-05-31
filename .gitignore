@@ -1,2 +1,7 @@
 *.dSYM
 *.o
+jennet
+examples/basicauth/basicauth
+examples/params/params
+examples/servedir/servedir
+examples/servefile/servefile
