@@ -1,6 +1,4 @@
-# jennet
-[![Build Status](https://travis-ci.org/Theodus/jennet.svg?branch=master)](https://travis-ci.org/Theodus/jennet)
-
+# jennet [![Build Status](https://travis-ci.org/Theodus/jennet.svg?branch=master)](https://travis-ci.org/Theodus/jennet)
 
 Jennet is an HTTP web framework written in Pony
 
@@ -13,7 +11,7 @@ Jennet is an HTTP web framework written in Pony
 
 - **Route Parameters:** Allow the router to parse the incoming URL path for you by specifying a route parameter. The router will then store a dynamic value in the context.
 
-- **File Server:** Easily serve static files and set custom NotFound handlers
+- **File Server:** Easily serve static files and set custom NotFound handlers.
 
 ## Usage
 
