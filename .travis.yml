@@ -39,4 +39,9 @@ before_script:
   - export PATH=$PATH:$PWD/build/release/
   - cd ..
 
-script: ponyc && ./jennet
+script:
+  - ponyc && ./jennet
+  - ponyc examples/basicauth
+  - ponyc examples/params
+  - ponyc examples/servedir
+  - ponyc examples/servefile
