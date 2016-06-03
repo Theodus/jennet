@@ -10,7 +10,7 @@ class iso Jennet
   let _server: Server
   let _out: OutStream
   let _auth: (AmbientAuth val | NetAuth val)
-  let _responder: Responder
+  var _responder: Responder
   var _base_middlewares: Array[Middleware] val = recover Array[Middleware] end
   let _routes: Array[_Route] iso = recover Array[_Route] end
   var _notfound: _HandlerGroup = _HandlerGroup(_DefaultNotFound)
@@ -101,6 +101,13 @@ class iso Jennet
     Replace the default Handler for NotFound responses.
     """
     _notfound = _HandlerGroup(handler)
+
+  fun ref responder(r: Responder) =>
+    """
+    Replace the responder used for responding to requests and logging the
+    responses.
+    """
+    _responder = r
 
   fun ref base_middleware(mw: Array[Middleware] val) =>
     """

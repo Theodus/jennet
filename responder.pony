@@ -4,6 +4,7 @@
 
 use "time"
 use "net/http"
+use "term"
 
 interface val Responder
   """
@@ -26,23 +27,20 @@ class DefaultResponder is Responder
     list.push("] ")
     list.push(time)
     list.push(" |")
-    let esc = "\x1b"
-    list.push(esc)
-    list.push("[1;")
     let status = res.status
     list.push(
       if (status >= 200) and (status < 300) then
-        "32m"
+        ANSI.bright_green()
       elseif (status >= 300) and (status < 400) then
-        "37m"
+        ANSI.bright_blue()
       elseif (status >= 400) and (status < 500) then
-        "33m"
+        ANSI.bright_yellow()
       else
-        "31m"
+        ANSI.bright_red()
       end)
     list.push(status.string())
-    list.push(esc)
-    list.push("[0m| ")
+    list.push(ANSI.reset())
+    list.push("| ")
     list.push(response_time)
     list.push(" | ")
     list.push(req.method)
@@ -53,6 +51,9 @@ class DefaultResponder is Responder
     (consume req).respond(consume res)
 
 class CommonResponder is Responder
+  """
+  Logs HTTP requests in the common log format.
+  """
   let _out: OutStream
 
   new val create(out: OutStream) =>
@@ -63,10 +64,10 @@ class CommonResponder is Responder
     let list = recover Array[String](24) end
     list.push(host)
     list.push(" - ")
-    list.push(_entry(req.url.user))
-    let time = Date(Time.seconds()).format("%d/%b/%Y:%H:%M:%S +0000")
+    let user = req.url.user
+    list.push(if user.size() > 0 then user else "-" end)
     list.push(" [")
-    list.push(time)
+    list.push(Date(Time.seconds()).format("%d/%b/%Y:%H:%M:%S +0000"))
     list.push("] \"")
     list.push(req.method)
     list.push(" ")
@@ -92,6 +93,3 @@ class CommonResponder is Responder
     list.push("\"\n")
     _out.writev(consume list)
     (consume req).respond(consume res)
-
-  fun _entry(s: String): String =>
-    if s.size() > 0 then s else "-" end
