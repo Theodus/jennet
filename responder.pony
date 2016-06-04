@@ -10,7 +10,7 @@ interface val Responder
   """
   Responds to the request and creates a log.
   """
-  fun val apply(req: Payload, res: Payload, response_time: String, host: String)
+  fun val apply(req: Payload, res: Payload, response_time: U64, host: String)
 
 class DefaultResponder is Responder
   let _out: OutStream
@@ -18,8 +18,7 @@ class DefaultResponder is Responder
   new val create(out: OutStream) =>
     _out = out
 
-  fun val apply(req: Payload, res: Payload, response_time: String, host: String)
-  =>
+  fun val apply(req: Payload, res: Payload, response_time: U64, host: String) =>
     let time = Date(Time.seconds()).format("%d/%b/%Y %H:%M:%S")
     let list = recover Array[String](17) end
     list.push("[")
@@ -41,7 +40,7 @@ class DefaultResponder is Responder
     list.push(status.string())
     list.push(ANSI.reset())
     list.push("| ")
-    list.push(response_time)
+    list.push(_format_time(response_time))
     list.push(" | ")
     list.push(req.method)
     list.push(" ")
@@ -49,6 +48,36 @@ class DefaultResponder is Responder
     list.push("\n")
     _out.writev(consume list)
     (consume req).respond(consume res)
+
+  fun _format_time(response_time: U64): String =>
+    var padding = "       "
+    let time = recover iso response_time.string() end
+    var unit = "ns"
+    let s = time.size()
+
+    if s < 4 then
+      None
+    elseif s < 7 then
+      time.insert_in_place(s.isize() - 3, ".")
+      unit = "µs"
+    elseif s < 10 then
+      time.insert_in_place(s.isize() - 6, ".")
+      unit = "ms"
+    else
+      time.insert_in_place(s.isize() - 9, ".")
+      unit = "s "
+    end
+    try
+      let i = time.find(".")
+      time.cut_in_place(i + 3)
+    end
+    padding = padding.substring(time.size().isize())
+    
+    let str = recover String(padding.size() + time.size() + unit.size()) end
+    str.append(padding)
+    str.append(consume time)
+    str.append(unit)
+    consume str
 
 class CommonResponder is Responder
   """
@@ -59,8 +88,7 @@ class CommonResponder is Responder
   new val create(out: OutStream) =>
     _out = out
 
-  fun val apply(req: Payload, res: Payload, response_time: String, host: String)
-  =>
+  fun val apply(req: Payload, res: Payload, response_time: U64, host: String) =>
     let list = recover Array[String](24) end
     list.push(host)
     list.push(" - ")

@@ -4,10 +4,9 @@
 
 use "collections"
 use "net/http"
+use "time"
 
 // TODO Separate map in context for iso values?
-
-use "time"
 
 class iso Context
   """
@@ -56,23 +55,5 @@ class iso Context
     """
     Respond to the given request with the response.
     """
-    let response_time = TimeFormat(_start_time, Time.nanos())
+    let response_time = Time.nanos() - _start_time
     _responder(consume req, consume res, response_time, _host)
-
-primitive TimeFormat
-  """
-  Formats the time difference between the current time and the start time so
-  that the correct units of time are logged.
-  """
-  fun apply(start_time: U64, end_time: U64): String =>
-    let time = (end_time - start_time).string()
-    let s = time.size()
-    if s < 4 then
-      time + "ns"
-    elseif s < 7 then
-      time.substring(0, s.isize() - 3) + "µs"
-    elseif s < 10 then
-      time.substring(0, s.isize() - 6) + "ms"
-    else
-      time.substring(0, s.isize() - 9) + "s"
-    end
