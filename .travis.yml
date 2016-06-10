@@ -1,15 +1,13 @@
-language: c
-
 branches:
   only:
     - master
 
 sudo: required
+dist: trusty
 
 addons:
   apt:
     sources:
-    - llvm-toolchain-precise-3.8
     - ubuntu-toolchain-r-test
     packages:
     - gcc-4.9
@@ -18,8 +16,6 @@ addons:
     - zlib1g-dev
     - libncurses5-dev
     - libssl-dev
-    - llvm-3.8
-    - llvm-3.8-dev
 
 install:
   - if [ "${TRAVIS_OS_NAME}" = "linux" ];
@@ -33,6 +29,12 @@ install:
     fi;
 
 before_script:
+  - sudo rm -rf /usr/local/clang*
+  - sudo rm -rf /var/lib/apt/lists/*
+  - wget http://llvm.org/releases/3.8.0/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+  - tar xvf clang*
+  - cd clang*
+  - sudo cp -r * /usr/local/ && cd ..
   - git clone https://github.com/ponylang/ponyc
   - cd ponyc
   - make config=release
