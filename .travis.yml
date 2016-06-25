@@ -42,7 +42,7 @@ before_script:
   - cd ..
 
 script:
-  - ponyc jennet && ./jennet/jennet
+  - ponyc jennet && ./jennet
   - ponyc examples/basicauth
   - ponyc examples/params
   - ponyc examples/servedir
