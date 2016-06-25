@@ -1,6 +1,6 @@
 *.dSYM
 *.o
-jennet
+jennet/jennet
 examples/basicauth/basicauth
 examples/params/params
 examples/servedir/servedir

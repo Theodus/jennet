@@ -1,5 +1,5 @@
 use "net/http"
-use "../.."
+use "../../jennet"
 use "collections"
 
 actor Main
