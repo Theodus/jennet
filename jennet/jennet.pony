@@ -150,6 +150,6 @@ class _DefaultNotFound is Handler
 
 primitive _NotFoundRes
   fun apply(): Payload iso^ =>
-    let res = Payload.response(404, "Not Found")
+    let res = Payload.response(StatusNotFound)
     res.add_chunk("404: Not Found")
     consume res

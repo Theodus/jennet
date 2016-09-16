@@ -59,6 +59,6 @@ class BasicAuth is Middleware
 
 primitive _RequestAuth
   fun apply(realm: String): Payload iso^ =>
-    let res = Payload.response(401, "Unauthorized")
+    let res = Payload.response(StatusUnauthorized)
     res("WWW-Authenticate") = "Basic realm=\"" + realm + "\""
     consume res

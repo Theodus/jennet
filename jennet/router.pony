@@ -33,7 +33,7 @@ class _Router
 
 class _Unavailable
   fun val apply(request: Payload) =>
-    let res = Payload.response(503, "Service Unavailable")
+    let res = Payload.response(StatusServiceUnavailable)
     (consume request).respond(consume res)
 
 class val _Route

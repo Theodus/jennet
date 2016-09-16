@@ -40,7 +40,7 @@ class iso _TestMultiplexer is UnitTest
     (hg, ps) = mux("GET", "/foo")
     h.assert_eq[String]("1", (hg.handler as _TestHandler val).msg)
 
-    (hg, ps) = mux("GET", "/stuff")
+    (hg, ps) = mux("GET", "/stuff") // TODO error in non-debug mode
     h.assert_eq[String]("2", (hg.handler as _TestHandler val).msg)
     h.assert_eq[String]("stuff", ps("foo"))
 
