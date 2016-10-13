@@ -2,8 +2,6 @@
 
 Jennet is an HTTP web framework written in Pony
 
-# Warning: This project is no longer compatible with recent versions of Pony and should therefore not be used.
-
 pony-stable: `{ "type": "github", "repo": "theodus/jennet" }`
 
 ## Features
