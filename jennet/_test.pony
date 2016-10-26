@@ -2,10 +2,10 @@
 // Use of this source code is governed by an MIT style
 // license that can be found in the LICENSE file.
 
-use "ponytest"
-use "net/http"
 use "collections"
 use "encode/base64"
+use "net/http"
+use "ponytest"
 
 actor Main is TestList
   new create(env: Env) => PonyTest(env, this)

@@ -2,17 +2,18 @@
 // Use of this source code is governed by an MIT style
 // license that can be found in the LICENSE file.
 
-use "net/http"
 use "collections"
+use "crypto"
 use "encode/base64"
 use "itertools"
+use "net/http"
 
 class BasicAuth is Middleware
   """
   Performs Basic Authentication as described in RFC 2617
   """
   let _realm: String
-  let _accounts:Map[String, String] val
+  let _accounts: Map[String, String] val
   let _max_un_size: USize
 
   new val create(realm: String, accounts: Map[String, String] val) =>
@@ -35,7 +36,7 @@ class BasicAuth is Middleware
       let given_un = creds(0)
       let given_pw = creds(1)
       if given_un.size() > _max_un_size then false end
-      _constant_time_compare(_accounts(given_un), given_pw)
+      ConstantTimeCompare(_accounts(given_un), given_pw)
     else
       false
     end
@@ -48,14 +49,6 @@ class BasicAuth is Middleware
 
   fun val after(c: Context): Context iso^ =>
     consume c
-
-  fun val _constant_time_compare(v1: String, v2: String): Bool =>
-    if v1.size() != v2.size() then false end
-    var res = U8(0)
-    for (x, y) in Zip2[U8, U8](v1.values(), v2.values()) do
-      res = res or (x xor y)
-    end
-    res == 0
 
 primitive _RequestAuth
   fun apply(realm: String): Payload iso^ =>

@@ -2,8 +2,8 @@
 // Use of this source code is governed by an MIT style
 // license that can be found in the LICENSE file.
 
-use "net/http"
 use "files"
+use "net/http"
 
 class _FileServer is Handler
   let _auth: AmbientAuth
