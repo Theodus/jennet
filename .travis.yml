@@ -10,8 +10,8 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     packages:
-    - gcc-4.9
-    - g++-4.9
+    - gcc-5
+    - g++-5
     - build-essential
     - zlib1g-dev
     - libncurses5-dev
@@ -20,8 +20,8 @@ addons:
 install:
   - if [ "${TRAVIS_OS_NAME}" = "linux" ];
     then
-      export CC="gcc-4.9";
-      export CXX="g++-4.9";
+      export CC="gcc-5";
+      export CXX="g++-5";
       wget ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre2-10.21.tar.bz2;
       tar -xjvf pcre2-10.21.tar.bz2;
       cd pcre2-10.21 && ./configure --prefix=/usr && make && sudo make install;
@@ -31,7 +31,7 @@ install:
 before_script:
   - sudo rm -rf /usr/local/clang*
   - sudo rm -rf /var/lib/apt/lists/*
-  - wget http://llvm.org/releases/3.8.0/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+  - wget http://llvm.org/releases/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
   - tar xvf clang*
   - cd clang*
   - sudo cp -r * /usr/local/ && cd ..
