@@ -29,8 +29,8 @@ class iso Jennet
     middlewares: Array[Middleware] val = recover Array[Middleware] end)
   =>
     """
-    Create a route for a GET method on the given URL path with the given handler
-    and middleware.
+    Create a route for a GET method on the given URL path with the given
+    handler and middleware.
     """
     _add_route("GET", path, handler, middlewares)
 
@@ -47,8 +47,8 @@ class iso Jennet
     middlewares: Array[Middleware] val = recover Array[Middleware] end)
   =>
     """
-    Create a route for a PUT method on the given URL path with the given handler
-    and middleware.
+    Create a route for a PUT method on the given URL path with the given
+    handler and middleware.
     """
     _add_route("PUT", path, handler, middlewares)
 

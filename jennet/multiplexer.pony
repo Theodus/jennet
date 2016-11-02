@@ -42,7 +42,9 @@ class _Node
   var _hg: (_HandlerGroup | None)
   let _children: Array[_Node]
 
-  new create(prefix': String, hg': (_HandlerGroup | None) = None,
+  new create(
+    prefix': String, 
+    hg': (_HandlerGroup | None) = None,
     params': Map[USize, String] = Map[USize, String],
     children': Array[_Node] = Array[_Node])
   =>
@@ -155,43 +157,43 @@ class _Node
       end
     end
 
-    fun apply(path: String, params: Map[String, String] iso):
-      (_HandlerGroup, Map[String, String] iso^) ?
-    =>
-      var path' = path
-      for i in Range[ISize](0, prefix.size().isize()) do
-        if prefix(i.usize()) == ':' then
-          // store params
-          let ns = try
-            path'.find("/", i.isize())
-          else
-            path'.size().isize()
-          end
-          let value = path'.substring(i, ns)
-          if value == "" then error end
-          params(_params(i.usize())) = consume value
-          path' = path'.cut(i.isize(), ns)
-        elseif prefix(i.usize()) == '*' then
-          params(_params(i.usize())) = path'.substring(i)
-          path' = path'.cut(i.isize(), path'.size().isize())
-        elseif prefix(i.usize()) != path'(i.usize()) then
-          // not found
-          error
+  fun apply(path: String, params: Map[String, String] iso):
+    (_HandlerGroup, Map[String, String] iso^) ?
+  =>
+    var path' = path
+    for i in Range[ISize](0, prefix.size().isize()) do
+      if prefix(i.usize()) == ':' then
+        // store params
+        let ns = try
+          path'.find("/", i.isize())
+        else
+          path'.size().isize()
         end
+        let value = path'.substring(i, ns)
+        if value == "" then error end
+        params(_params(i.usize())) = consume value
+        path' = path'.cut(i.isize(), ns)
+      elseif prefix(i.usize()) == '*' then
+        params(_params(i.usize())) = path'.substring(i)
+        path' = path'.cut(i.isize(), path'.size().isize())
+      elseif prefix(i.usize()) != path'(i.usize()) then
+        // not found
+        error
       end
+    end
 
-      let remaining = path'.substring(prefix.size().isize())
-      // check for edge
-      if remaining == "" then
-        return (_hg as _HandlerGroup, consume params)
+    let remaining = path'.substring(prefix.size().isize())
+    // check for edge
+    if remaining == "" then
+      return (_hg as _HandlerGroup, consume params)
+    end
+    // pass on to child
+    for c in _children.values() do
+      match c.prefix(0)
+      | '*' => return c(consume remaining, consume params)
+      | ':' => return c(consume remaining, consume params)
+      | remaining(0) => return c(consume remaining, consume params)
       end
-      // pass on to child
-      for c in _children.values() do
-        match c.prefix(0)
-        | '*' => return c(consume remaining, consume params)
-        | ':' => return c(consume remaining, consume params)
-        | remaining(0) => return c(consume remaining, consume params)
-        end
-      end
-      // not found
-      error
+    end
+    // not found
+    error
