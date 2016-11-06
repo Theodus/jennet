@@ -44,7 +44,7 @@ class iso _TestMultiplexer is UnitTest
     h.assert_eq[String]("2", (hg.handler as _TestHandler val).msg)
     h.assert_eq[String]("stuff", ps("foo"))
 
-    h.assert_error(lambda()(mux) ? => mux("GET", "/foo/bar") end)
+    h.assert_error({()(mux) ? => mux("GET", "/foo/bar")})
     (hg, ps) = mux("GET", "/foo/bar/")
     h.assert_eq[String]("3", (hg.handler as _TestHandler val).msg)
 
