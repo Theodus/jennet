@@ -78,7 +78,7 @@ class iso _TestBasicAuth is UnitTest
     let auth1 = recover val Base64.encode("test_username:test_password") end
     req1("Authorization") = "Basic " + auth1
     hg(Context(DefaultResponder(h.env.out),
-      recover Map[String, String] end, "test"), consume req1)
+      recover Map[String, String] end), consume req1)
 
     let req2 = Payload.request("GET", URL.build("/"),
       _TestAuthResUnauthorized(h))
@@ -86,7 +86,7 @@ class iso _TestBasicAuth is UnitTest
     req2("Authorization") = "Basic " + auth2
     try
       hg(Context(DefaultResponder(h.env.out),
-        recover Map[String, String] end, "test"), consume req2)
+        recover Map[String, String] end), consume req2)
     end
 
     h.complete(true)

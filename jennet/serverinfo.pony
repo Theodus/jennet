@@ -7,9 +7,11 @@ use "promises"
 
 class _ServerInfo is ServerNotify
     let _out: OutStream
+    let _responder: Responder
 
-    new iso create(out: OutStream) =>
+    new iso create(out: OutStream, responder: Responder) =>
       _out = out
+      _responder = responder
 
     fun ref listening(server: Server ref) =>
       try

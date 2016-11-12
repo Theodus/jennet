@@ -2,6 +2,7 @@
 // Use of this source code is governed by an MIT style
 // license that can be found in the LICENSE file.
 
+use "net"
 use "net/http"
 use "term"
 use "time"
@@ -10,48 +11,56 @@ interface val Responder
   """
   Responds to the request and creates a log.
   """
-  fun val apply(req: Payload, res: Payload, response_time: U64, host: String)
+  fun apply(req: Payload, res: Payload, response_time: U64)
 
-class DefaultResponder is Responder
+class val DefaultResponder is Responder
   let _out: OutStream
+  let _host: String
 
   new val create(out: OutStream) =>
     _out = out
+    _host = try
+      (let host, let service) = IPAddress.name()
+      recover String.>append(host).>push(':').>append(service) end
+    else
+      "Jennet" // TODO get IP from server
+    end
 
-  fun val apply(req: Payload, res: Payload, response_time: U64, host: String) =>
+  fun apply(req: Payload, res: Payload, response_time: U64) =>
     let time = Date(Time.seconds()).format("%d/%b/%Y %H:%M:%S")
-    let list = recover Array[String](17) end
-    list.push("[")
-    list.push(host)
-    list.push("] ")
-    list.push(time)
-    list.push(" |")
     let status = res.status
-    list.push(
-      if (status >= 200) and (status < 300) then
-        ANSI.bright_green()
-      elseif (status >= 300) and (status < 400) then
-        ANSI.bright_blue()
-      elseif (status >= 400) and (status < 500) then
-        ANSI.bright_yellow()
-      else
-        ANSI.bright_red()
-      end)
-    list.push(status.string())
-    list.push(ANSI.reset())
-    list.push("| ")
-    list.push(_format_time(response_time))
-    list.push(" | ")
-    list.push(req.method)
-    list.push(" ")
-    list.push(req.url.path)
-    list.push("\n")
-    _out.writev(consume list)
+    _out.writev(recover
+      Array[String](15)
+        .>push("[")
+        .>push(_host)
+        .>push("] ")
+        .>push(time)
+        .>push(" |")
+        .>push(
+          if (status >= 200) and (status < 300) then
+            ANSI.bright_green()
+          elseif (status >= 300) and (status < 400) then
+            ANSI.bright_blue()
+          elseif (status >= 400) and (status < 500) then
+            ANSI.bright_yellow()
+          else
+            ANSI.bright_red()
+          end)
+        .>push(status.string())
+        .>push(ANSI.reset())
+        .>push("| ")
+        .>push(_format_time(response_time))
+        .>push(" | ")
+        .>push(req.method)
+        .>push(" ")
+        .>push(req.url.path)
+        .>push("\n")
+    end)
     (consume req).respond(consume res)
 
   fun _format_time(response_time: U64): String =>
     var padding = "       "
-    let time = recover iso response_time.string() end
+    let time = recover response_time.string() end
     var unit = "ns"
     let s = time.size()
 
@@ -72,52 +81,62 @@ class DefaultResponder is Responder
       time.cut_in_place(i + 3)
     end
     padding = padding.substring(time.size().isize())
-    
-    let str = recover String(padding.size() + time.size() + unit.size()) end
-    str.append(padding)
-    str.append(consume time)
-    str.append(unit)
-    consume str
+    let time_size = time.size()
+    recover
+      String(padding.size() + time_size + unit.size())
+        .>append(padding)
+        .>append(consume time)
+        .>append(unit)
+    end
 
-class CommonResponder is Responder
+class val CommonResponder is Responder
   """
   Logs HTTP requests in the common log format.
   """
   let _out: OutStream
+  let _host: String
 
   new val create(out: OutStream) =>
     _out = out
+    _host = try
+      (let host, let service) = IPAddress.name()
+      recover String.>append(host).>push(':').>append(service) end
+    else
+      "jennet"
+    end
 
-  fun val apply(req: Payload, res: Payload, response_time: U64, host: String) =>
-    let list = recover Array[String](24) end
-    list.push(host)
-    list.push(" - ")
+  fun apply(req: Payload, res: Payload, response_time: U64) =>
     let user = req.url.user
-    list.push(if user.size() > 0 then user else "-" end)
-    list.push(" [")
-    list.push(Date(Time.seconds()).format("%d/%b/%Y:%H:%M:%S +0000"))
-    list.push("] \"")
-    list.push(req.method)
-    list.push(" ")
-    list.push(req.url.path)
-    if req.url.query.size() > 0 then
-      list.push("?")
-      list.push(req.url.query)
-    end
-    if req.url.fragment.size() > 0 then
-      list.push("#")
-      list.push(req.url.fragment)
-    end
-    list.push(" ")
-    list.push(req.proto)
-    list.push("\" ")
-    list.push(res.status.string())
-    list.push(" ")
-    list.push(res.body_size().string())
-    list.push(" \"")
-    try list.push(req("Referrer")) end
-    list.push("\" \"")
-    try list.push(req("User-Agent")) end
-    list.push("\"\n")
-    _out.writev(consume list)
+    _out.writev(recover
+      let list = Array[String](24)
+        .>push(_host)
+        .>push(" - ")
+        .>push(if user.size() > 0 then user else "-" end)
+        .>push(" [")
+        .>push(Date(Time.seconds()).format("%d/%b/%Y:%H:%M:%S +0000"))
+        .>push("] \"")
+        .>push(req.method)
+        .>push(" ")
+        .>push(req.url.path)
+      if req.url.query.size() > 0 then
+        list.push("?")
+        list.push(req.url.query)
+      end
+      if req.url.fragment.size() > 0 then
+        list.push("#")
+        list.push(req.url.fragment)
+      end
+      list
+        .>push(" ")
+        .>push(req.proto)
+        .>push("\" ")
+        .>push(res.status.string())
+        .>push(" ")
+        .>push(res.body_size().string())
+        .>push(" \"")
+      try list.push(req("Referrer")) end
+      list.push("\" \"")
+      try list.push(req("User-Agent")) end
+      list.push("\"\n")  
+    end)
     (consume req).respond(consume res)

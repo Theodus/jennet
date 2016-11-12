@@ -17,13 +17,24 @@ class iso Jennet
   var _host: String = "Jennet" // TODO get host from server
 
   new iso create(
-    auth: (AmbientAuth val | NetAuth val), out: OutStream, service: String)
+    auth: (AmbientAuth val | NetAuth val), 
+    out: OutStream, 
+    service: String,
+    responder: (Responder | None) = None)
   =>
-    _server = Server(auth, _ServerInfo(out), _Unavailable, DiscardLog
-      where service = service, reversedns = auth)
+    _responder = match responder
+    | let r: Responder => r
+    else DefaultResponder(out)
+    end
+    _server = Server(
+      auth,
+      _ServerInfo(out, _responder),
+      _Unavailable,
+      DiscardLog
+      where service = service, reversedns = auth
+    )
     _out = out
     _auth = auth
-    _responder = DefaultResponder(out)
 
   fun ref get(path: String, handler: Handler,
     middlewares: Array[Middleware] val = recover Array[Middleware] end)
@@ -102,13 +113,6 @@ class iso Jennet
     """
     _notfound = _HandlerGroup(handler)
 
-  fun ref responder(r: Responder) =>
-    """
-    Replace the responder used for responding to requests and logging the
-    responses.
-    """
-    _responder = r
-
   fun ref base_middleware(mw: Array[Middleware] val) =>
     """
     Replace the middleware added to all routes.
@@ -120,7 +124,7 @@ class iso Jennet
     Serve incomming HTTP requests.
     """
     let mux = _Multiplexer(_routes)
-    let router = _Router(consume mux, _responder, _notfound, _host)
+    let router = _Router(consume mux, _responder, _notfound)
     _server.set_handler(router)
 
   fun ref _add_route(method: String, path: String,

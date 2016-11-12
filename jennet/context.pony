@@ -15,16 +15,12 @@ class iso Context
   let _responder: Responder
   let _params: Map[String, String]
   let _data: Map[String, Any val]
-  let _host: String
   let _start_time: U64
 
-  new iso create(responder': Responder, params': Map[String, String] iso,
-    host': String)
-  =>
+  new iso create(responder': Responder, params': Map[String, String] iso) =>
     _responder = responder'
     _params = consume params'
     _data = Map[String, Any val]
-    _host = host'
     _start_time = Time.nanos()
 
   fun ref param(key: String): String val =>
@@ -56,4 +52,4 @@ class iso Context
     Respond to the given request with the response.
     """
     let response_time = Time.nanos() - _start_time
-    _responder(consume req, consume res, response_time, _host)
+    _responder(consume req, consume res, response_time)
