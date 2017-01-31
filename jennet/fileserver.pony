@@ -14,7 +14,7 @@ class _FileServer is Handler
     _filepath = filepath
 
   fun val apply(c: Context, req: Payload): Context iso^ =>
-    let caps = recover val FileCaps.set(FileRead).set(FileStat) end
+    let caps = recover val FileCaps.>set(FileRead).>set(FileStat) end
     let res = try
       let r = Payload.response()
       let cwd = Path.cwd()
@@ -44,7 +44,7 @@ class _DirServer is Handler
     _dir = dir
 
   fun val apply(c: Context, req: Payload): Context iso^ =>
-    let caps = recover val FileCaps.set(FileRead).set(FileStat) end
+    let caps = recover val FileCaps.>set(FileRead).>set(FileStat) end
     let filepath = c.param("filepath")
     let res = try
       let r = Payload.response()

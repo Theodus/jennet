@@ -137,6 +137,6 @@ class val CommonResponder is Responder
       try list.push(req("Referrer")) end
       list.push("\" \"")
       try list.push(req("User-Agent")) end
-      list.push("\"\n")  
+      list.>push("\"\n")  
     end)
     (consume req).respond(consume res)
