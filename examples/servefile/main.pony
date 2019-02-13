@@ -1,4 +1,4 @@
-use "net/http"
+use "http"
 use "../../jennet"
 
 actor Main
@@ -9,12 +9,12 @@ actor Main
       env.out.print("unable to use network.")
       return
     end
-    
+
     let jennet = Jennet(auth, env.out, "8080")
-    jennet.serve_file(auth, "/", "/index.html")
-    
+    jennet.serve_file(auth, "/", "index.html")
+
     try
-      (consume jennet).serve()
+      (consume jennet).serve()?
     else
       env.out.print("invalid routes.")
     end

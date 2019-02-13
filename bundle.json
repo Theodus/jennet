@@ -1,0 +1,9 @@
+{
+  "deps": [
+    {
+      "tag": "master",
+      "type": "github",
+      "repo": "ponylang/http"
+    }
+  ]
+}

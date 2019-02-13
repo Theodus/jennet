@@ -1,4 +1,4 @@
-use "net/http"
+use "http"
 use "../../jennet"
 
 actor Main
@@ -9,19 +9,19 @@ actor Main
       env.out.print("unable to use network.")
       return
     end
-    
+
     let jennet = Jennet(auth, env.out, "8080")
     jennet.get("/", H)
     jennet.get("/:name", H)
-    
+
     try
-      (consume jennet).serve()
+      (consume jennet).serve()?
     else
       env.out.print("invalid routes.")
     end
 
 primitive H is Handler
-  fun apply(c: Context, req: Payload): Context iso^ =>
+  fun apply(c: Context, req: Payload val): Context iso^ =>
     let res = Payload.response()
     let name = c.param("name")
     res.add_chunk("Hello")
@@ -29,5 +29,5 @@ primitive H is Handler
       res.add_chunk(" " + name)
     end
     res.add_chunk("!")
-    c.respond(consume req, consume res)
+    c.respond(req, consume res)
     consume c

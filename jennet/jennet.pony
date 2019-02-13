@@ -4,10 +4,10 @@
 
 use "collections"
 use "net"
-use "net/http"
+use "http"
 
 class iso Jennet
-  let _server: Server
+  let _server: HTTPServer
   let _out: OutStream
   let _auth: (AmbientAuth val | NetAuth val)
   var _responder: Responder
@@ -17,8 +17,8 @@ class iso Jennet
   var _host: String = "Jennet" // TODO get host from server
 
   new iso create(
-    auth: (AmbientAuth val | NetAuth val), 
-    out: OutStream, 
+    auth: (AmbientAuth val | NetAuth val),
+    out: OutStream,
     service: String,
     responder: (Responder | None) = None)
   =>
@@ -26,10 +26,10 @@ class iso Jennet
     | let r: Responder => r
     else DefaultResponder(out)
     end
-    _server = Server(
+    _server = HTTPServer(
       auth,
       _ServerInfo(out, _responder),
-      _Unavailable,
+      _UnavailableFactory,
       DiscardLog
       where service = service, reversedns = auth
     )
@@ -93,7 +93,10 @@ class iso Jennet
   fun ref serve_file(auth: AmbientAuth, path: String, filepath: String) =>
     """
     Serve static file located at the relative filepath when GET requests are
-    recieved for the given path.
+    received for the given path.
+
+    filepath should be absolute, otherwise it is considered
+    relative to the current working directory of the jennet process.
     """
     _add_route("GET", path, _FileServer(auth, filepath),
       recover Array[Middleware] end)
@@ -101,8 +104,11 @@ class iso Jennet
   fun ref serve_dir(auth: AmbientAuth, path: String, dir: String) =>
     """
     Serve all files in dir using the incomming url path suffix denoted by
-    *filepath in the given path. path must be in the form of:
-    "/some_dir/*filepath".
+    *filepath in the given path.
+
+    path must be in the form of: "/some_dir/*filepath".
+    dir should be absolute, otherwise it is considered relative
+    to the current working directory of the jennet process,
     """
     _add_route("GET", path, _DirServer(auth, dir),
       recover Array[Middleware] end)
@@ -123,9 +129,9 @@ class iso Jennet
     """
     Serve incomming HTTP requests.
     """
-    let mux = _Multiplexer(_routes)
-    let router = _Router(consume mux, _responder, _notfound)
-    _server.set_handler(router)
+    let mux = _Multiplexer(_routes)?
+    let router_factory = _RouterFactory(consume mux, _responder, _notfound)
+    _server.set_handler(router_factory)
 
   fun ref _add_route(method: String, path: String,
     handler: Handler, middlewares: Array[Middleware] val)
@@ -140,16 +146,32 @@ class iso Jennet
     let route = _Route(method, path, hg)
     _routes.push(route)
 
+class val _RouterFactory
+  let _mux: _Multiplexer val
+  let _responder: Responder
+  let _not_found: _HandlerGroup
+
+  new val create(
+    mux: _Multiplexer val,
+    responder: Responder,
+    not_found: _HandlerGroup) =>
+    _mux = mux
+    _responder = responder
+    _not_found = not_found
+
+  fun apply(session: HTTPSession): HTTPHandler ref^ =>
+    recover ref _Router(_mux, _responder, _not_found) end
+
 interface val Middleware
-  fun val apply(c: Context, req: Payload): (Context iso^, Payload iso^) ?
+  fun val apply(c: Context, req: Payload val): (Context iso^, Payload val) ?
   fun val after(c: Context): Context iso^
 
 interface val Handler
-  fun val apply(c: Context, req: Payload): Context iso^ ?
+  fun val apply(c: Context, req: Payload val): Context iso^ ?
 
 class _DefaultNotFound is Handler
-  fun val apply(c: Context, req: Payload): Context iso^ =>
-    c.respond(consume req, _NotFoundRes())
+  fun val apply(c: Context, req: Payload val): Context iso^ =>
+    c.respond(req, _NotFoundRes())
     consume c
 
 primitive _NotFoundRes

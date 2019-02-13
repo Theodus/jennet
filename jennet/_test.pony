@@ -4,7 +4,7 @@
 
 use "collections"
 use "encode/base64"
-use "net/http"
+use "http"
 use "ponytest"
 
 actor Main is TestList
@@ -32,32 +32,32 @@ class iso _TestMultiplexer is UnitTest
     for (p, hg) in tests.values() do
       routes.push(_Route("GET", p, hg))
     end
-    let mux = recover val _Multiplexer(consume routes) end
+    let mux = recover val _Multiplexer(consume routes)? end
 
-    (var hg, var ps) = mux("GET", "/")
+    (var hg, var ps) = mux("GET", "/")?
     h.assert_eq[String]("0", (hg.handler as _TestHandler val).msg)
 
-    (hg, ps) = mux("GET", "/foo")
+    (hg, ps) = mux("GET", "/foo")?
     h.assert_eq[String]("1", (hg.handler as _TestHandler val).msg)
 
-    (hg, ps) = mux("GET", "/stuff") // TODO error in non-debug mode
+    (hg, ps) = mux("GET", "/stuff")? // TODO error in non-debug mode
     h.assert_eq[String]("2", (hg.handler as _TestHandler val).msg)
-    h.assert_eq[String]("stuff", ps("foo"))
+    h.assert_eq[String]("stuff", ps("foo")?)
 
-    h.assert_error({()(mux) ? => mux("GET", "/foo/bar")})
-    (hg, ps) = mux("GET", "/foo/bar/")
+    h.assert_error({()(mux) ? => mux("GET", "/foo/bar")? })
+    (hg, ps) = mux("GET", "/foo/bar/")?
     h.assert_eq[String]("3", (hg.handler as _TestHandler val).msg)
 
-    (hg, ps) = mux("GET", "/baz/bar")
+    (hg, ps) = mux("GET", "/baz/bar")?
     h.assert_eq[String]("4", (hg.handler as _TestHandler val).msg)
 
-    (hg, ps) = mux("GET", "/stuff/baz")
+    (hg, ps) = mux("GET", "/stuff/baz")?
     h.assert_eq[String]("5", (hg.handler as _TestHandler val).msg)
-    h.assert_eq[String]("stuff", ps("foo"))
+    h.assert_eq[String]("stuff", ps("foo")?)
 
-    (hg, ps) = mux("GET", "/foo/bar/stuff/and/things")
+    (hg, ps) = mux("GET", "/foo/bar/stuff/and/things")?
     h.assert_eq[String]("6", (hg.handler as _TestHandler val).msg)
-    h.assert_eq[String]("stuff/and/things", ps("baz"))
+    h.assert_eq[String]("stuff/and/things", ps("baz")?)
 
 class iso _TestBasicAuth is UnitTest
   fun name(): String => "BasicAuth"
@@ -74,19 +74,18 @@ class iso _TestBasicAuth is UnitTest
 
     h.long_test(1_000_000_000)
 
-    let req1 = Payload.request("GET", URL.build("/"), _TestAuthResOK(h))
+    let req1 = Payload.request("GET", URL.build("/")?)
     let auth1 = recover val Base64.encode("test_username:test_password") end
     req1("Authorization") = "Basic " + auth1
-    hg(Context(DefaultResponder(h.env.out),
-      recover Map[String, String] end), consume req1)
+    hg(Context(_TestAuthResOK(h),
+      recover Map[String, String] end), consume req1)?
 
-    let req2 = Payload.request("GET", URL.build("/"),
-      _TestAuthResUnauthorized(h))
+    let req2 = Payload.request("GET", URL.build("/")?)
     let auth2 = recover val Base64.encode("bad_username:bad_password") end
     req2("Authorization") = "Basic " + auth2
     try
-      hg(Context(DefaultResponder(h.env.out),
-        recover Map[String, String] end), consume req2)
+      hg(Context(_TestAuthResUnauthorized(h),
+        recover Map[String, String] end), consume req2)?
     end
 
     h.complete(true)
@@ -98,26 +97,26 @@ class _TestHandler is Handler
   new val create(msg': String) =>
     msg = msg'
 
-  fun val apply(c: Context, req: Payload): Context iso^ =>
+  fun val apply(c: Context, req: Payload val): Context iso^ =>
     let res = Payload.response()
     res("msg") = msg
-    c.respond(consume req, consume res)
+    c.respond(req, consume res)
     consume c
 
-class _TestAuthResOK is ResponseHandler
+class _TestAuthResOK is Responder
   let h: TestHelper
 
   new val create(h': TestHelper) =>
     h = h'
 
-  fun val apply(request: Payload val, response: Payload val) =>
+  fun apply(request: Payload val, response: Payload val, response_time: U64) =>
     h.assert_eq[U16](200, response.status)
 
-class _TestAuthResUnauthorized is ResponseHandler
+class _TestAuthResUnauthorized is Responder
   let h: TestHelper
 
   new val create(h': TestHelper) =>
     h = h'
 
-  fun val apply(request: Payload val, response: Payload val) =>
+  fun apply(request: Payload val, response: Payload val, respone_time: U64) =>
     h.assert_eq[U16](401, response.status)
