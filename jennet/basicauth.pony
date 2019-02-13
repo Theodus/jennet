@@ -6,7 +6,7 @@ use "collections"
 use "crypto"
 use "encode/base64"
 use "itertools"
-use "net/http"
+use "http"
 
 class BasicAuth is Middleware
   """
@@ -25,23 +25,23 @@ class BasicAuth is Middleware
     _accounts = consume accounts
     _max_un_size = max_size
 
-  fun val apply(c: Context, req: Payload): (Context iso^, Payload iso^) ? =>
+  fun val apply(c: Context, req: Payload val): (Context iso^, Payload val) ? =>
     let authorized = try
-      let auth = req("Authorization")
+      let auth = req("Authorization")?
       let basic_scheme = "Basic "
       if not auth.at(basic_scheme) then error end
-      let decoded = Base64.decode[String iso](auth.substring(basic_scheme.size().isize()))
+      let decoded = Base64.decode[String iso](auth.substring(basic_scheme.size().isize()))?
       let creds = decoded.split(":")
       if creds.size() != 2 then error end
-      let given_un = creds(0)
-      let given_pw = creds(1)
+      let given_un = creds(0)?
+      let given_pw = creds(1)?
       if given_un.size() > _max_un_size then false end
-      ConstantTimeCompare(_accounts(given_un), given_pw)
+      ConstantTimeCompare(_accounts(given_un)?, given_pw)
     else
       false
     end
     if authorized then
-      (consume c, consume req)
+      (consume c, req)
     else
       c.respond(consume req, _RequestAuth(_realm))
       error

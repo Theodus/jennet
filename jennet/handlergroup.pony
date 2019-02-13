@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT style
 // license that can be found in the LICENSE file.
 
-use "net/http"
+use "http"
 
 class val _HandlerGroup
   let middlewares: Array[Middleware] val
@@ -14,29 +14,31 @@ class val _HandlerGroup
     middlewares = middlewares'
     handler = handler'
 
-  fun val apply(c: Context, req: Payload) ? =>
+  fun val apply(c: Context, req: Payload val) ? =>
     match middlewares.size()
     | 0 =>
-      handler(consume c, consume req)
+      handler(consume c, req)?
     else
-      (let c', let req') = middlewares_apply(0, consume c, consume req)
-      middlewares_after(middlewares.size() - 1,
-        handler(consume c', consume req'))
+      (let c', let req') = middlewares_apply(0, consume c, consume req)?
+      middlewares_after(
+        middlewares.size() - 1,
+        handler(consume c', consume req')?
+      )?
     end
 
-  fun val middlewares_apply(i: USize, c: Context, req: Payload):
-    (Context iso^, Payload iso^) ?
+  fun val middlewares_apply(i: USize, c: Context, req: Payload val):
+    (Context iso^, Payload val) ?
   =>
     match i
-    | middlewares.size() => (consume c, consume req)
+    | middlewares.size() => (consume c, req)
     else
-      (let c', let req') = middlewares(i)(consume c, consume req)
-      middlewares_apply(i + 1, consume c', consume req')
+      (let c', let req') = middlewares(i)?(consume c, req)?
+      middlewares_apply(i + 1, consume c', req')?
     end
 
   fun middlewares_after(i: USize, c: Context): Context iso^ ? =>
     match i
     | -1 => consume c
     else
-      middlewares_after(i - 1, middlewares(i).after(consume c))
+      middlewares_after(i - 1, middlewares(i)?.after(consume c))?
     end

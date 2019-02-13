@@ -3,36 +3,39 @@
 // license that can be found in the LICENSE file.
 
 use "collections"
-use "net/http"
+use "http"
 
-class val _Router
-  let _mux: _Multiplexer
+class val _Router is HTTPHandler
+  let _mux: _Multiplexer val
   let _responder: Responder
   let _notfound: _HandlerGroup
 
-  new val create(mux: _Multiplexer, responder: Responder,
+  new create(mux: _Multiplexer val, responder: Responder,
     notfound: _HandlerGroup)
   =>
-    _mux = consume mux
+    _mux = mux
     _responder = responder
     _notfound = notfound
 
-  fun val apply(request: Payload) =>
+  fun ref apply(request: Payload val) =>
     (let hg, let c) = try
-      (let hg, let params) = _mux(request.method, request.url.path)
+      (let hg, let params) = _mux(request.method, request.url.path)?
       let c = Context(_responder, consume params)
       (hg, consume c)
     else
       (_notfound, Context(_responder, recover Map[String, String] end))
     end
     try
-      hg(consume c, consume request)
+      hg(consume c, consume request)?
     end
 
-primitive _Unavailable
-  fun apply(request: Payload) =>
-    let res = Payload.response(StatusServiceUnavailable)
-    (consume request).respond(consume res)
+primitive _UnavailableFactory is HandlerFactory
+  fun apply(session: HTTPSession): HTTPHandler ref^ =>
+    object is HTTPHandler
+      fun ref apply(request: Payload val) =>
+        let res = Payload.response(StatusServiceUnavailable)
+        session(consume res)
+    end
 
 class val _Route
   let method: String

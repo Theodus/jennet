@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 use "net"
-use "net/http"
+use "http"
 use "term"
 use "time"
 
@@ -11,7 +11,7 @@ interface val Responder
   """
   Responds to the request and creates a log.
   """
-  fun apply(req: Payload, res: Payload, response_time: U64)
+  fun apply(req: Payload val, res: Payload val, response_time: U64)
 
 class val DefaultResponder is Responder
   let _out: OutStream
@@ -20,14 +20,14 @@ class val DefaultResponder is Responder
   new val create(out: OutStream) =>
     _out = out
     _host = try
-      (let host, let service) = IPAddress.name()
+      (let host, let service) = NetAddress.name()?
       recover String.>append(host).>push(':').>append(service) end
     else
       "Jennet" // TODO get IP from server
     end
 
-  fun apply(req: Payload, res: Payload, response_time: U64) =>
-    let time = Date(Time.seconds()).format("%d/%b/%Y %H:%M:%S")
+  fun apply(req: Payload val, res: Payload val, response_time: U64) =>
+    let time = try PosixDate(Time.seconds()).format("%d/%b/%Y %H:%M:%S")? else "ERROR" end
     let status = res.status
     _out.writev(recover
       Array[String](15)
@@ -56,7 +56,9 @@ class val DefaultResponder is Responder
         .>push(req.url.path)
         .>push("\n")
     end)
-    (consume req).respond(consume res)
+    try
+      (req.session as HTTPSession).apply(res)
+    end
 
   fun _format_time(response_time: U64): String =>
     var padding = "       "
@@ -77,7 +79,7 @@ class val DefaultResponder is Responder
       unit = "s "
     end
     try
-      let i = time.find(".")
+      let i = time.find(".")?
       time.cut_in_place(i + 3)
     end
     padding = padding.substring(time.size().isize())
@@ -99,13 +101,13 @@ class val CommonResponder is Responder
   new val create(out: OutStream) =>
     _out = out
     _host = try
-      (let host, let service) = IPAddress.name()
+      (let host, let service) = NetAddress.name()?
       recover String.>append(host).>push(':').>append(service) end
     else
       "jennet"
     end
 
-  fun apply(req: Payload, res: Payload, response_time: U64) =>
+  fun apply(req: Payload val, res: Payload val, response_time: U64) =>
     let user = req.url.user
     _out.writev(recover
       let list = Array[String](24)
@@ -113,7 +115,7 @@ class val CommonResponder is Responder
         .>push(" - ")
         .>push(if user.size() > 0 then user else "-" end)
         .>push(" [")
-        .>push(Date(Time.seconds()).format("%d/%b/%Y:%H:%M:%S +0000"))
+        .>push(try PosixDate(Time.seconds()).format("%d/%b/%Y:%H:%M:%S +0000")? else "ERROR" end)
         .>push("] \"")
         .>push(req.method)
         .>push(" ")
@@ -134,9 +136,11 @@ class val CommonResponder is Responder
         .>push(" ")
         .>push(res.body_size().string())
         .>push(" \"")
-      try list.push(req("Referrer")) end
+      try list.push(req("Referrer")?) end
       list.push("\" \"")
-      try list.push(req("User-Agent")) end
-      list.>push("\"\n")  
+      try list.push(req("User-Agent")?) end
+      list.>push("\"\n")
     end)
-    (consume req).respond(consume res)
+    try
+      (req.session as HTTPSession).apply(res)
+    end

@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 use "collections"
-use "net/http"
+use "http"
 
 // TODO weight optimization
 // TODO path auto-correction
@@ -17,15 +17,15 @@ class iso _Multiplexer
       let method = r.method
       let hg = _HandlerGroup(r.hg.handler, r.hg.middlewares)
       if _methods.contains(method) then
-        _methods(method).add(r.path.clone(), hg)
+        _methods(method)?.add(r.path.clone(), hg)?
       else
         _methods(method) = _Node(r.path, hg)
       end
     end
 
-  fun val apply(method: String, path: String):
+  fun apply(method: String, path: String):
     (_HandlerGroup, Map[String, String] iso^) ? =>
-    let path' = if path(0) != '/' then
+    let path' = if path(0)? != '/' then
       let p = recover String(path.size() + 1) end
       p.append("/")
       p.append(consume path)
@@ -33,8 +33,8 @@ class iso _Multiplexer
     else
       consume path
     end
-    let n = _methods(method)
-    n(consume path', recover Map[String, String] end)
+    let n = _methods(method)?
+    n(consume path', recover Map[String, String] end)?
 
 class _Node
   let prefix: String
@@ -43,7 +43,7 @@ class _Node
   let _children: Array[_Node]
 
   new create(
-    prefix': String, 
+    prefix': String,
     hg': (_HandlerGroup | None) = None,
     params': Map[USize, String] = Map[USize, String],
     children': Array[_Node] = Array[_Node])
@@ -56,15 +56,15 @@ class _Node
     if params'.size() == 0 then
       for i in Range[USize](0, pfx.size()) do
         try
-          if pfx(i) == ':' then
+          if pfx(i)? == ':' then
             let ns = try
-              pfx.find("/", i.isize())
+              pfx.find("/", i.isize())?
             else
               pfx.size().isize()
             end
             _params(i) = pfx.substring(i.isize() + 1, ns)
             pfx.delete(i.isize() + 1, ns.usize())
-          elseif pfx(i) == '*' then
+          elseif pfx(i)? == '*' then
             _params(i) = pfx.substring(i.isize() + 1)
             pfx.delete(i.isize() + 1, pfx.size())
           end
@@ -80,18 +80,18 @@ class _Node
       return n1
     end
     for i in Range[USize](0, prefix.size()) do
-      if prefix(i) == ':' then
+      if prefix(i)? == ':' then
         let ns = try
-          path.find("/", i.isize())
+          path.find("/", i.isize())?
         else
           path.size().isize()
         end
         let value = path.substring(i.isize(), ns)
         if value == "" then error end
         path.delete(i.isize(), ns.usize())
-      elseif prefix(i) == '*' then
+      elseif prefix(i)? == '*' then
         path.delete(i.isize(), path.size())
-      elseif prefix(i) != path(i) then
+      elseif prefix(i)? != path(i)? then
         // branch in prefix
         let params0 = Map[USize, String]
         let params1 = Map[USize, String]
@@ -124,14 +124,14 @@ class _Node
     end
     // pass on to child
     for c in _children.values() do
-      if c.prefix(0) == remaining(0) then
-        return c.add(consume remaining, hg)
+      if c.prefix(0)? == remaining(0)? then
+        return c.add(consume remaining, hg)?
       end
     end
     // add child and reorder
     let c = create(consume remaining, hg)
     _children.push(c)
-    reorder()
+    reorder()?
     this
 
   fun ref add_child(child: _Node) =>
@@ -141,7 +141,7 @@ class _Node
     // check if there are more than one param children
     var ps: USize = 0
     for c in _children.values() do
-      if c.prefix(0) == ':' then
+      if c.prefix(0)? == ':' then
         ps = ps + 1
       end
     end
@@ -149,8 +149,8 @@ class _Node
     // give param child last priority
     if ps != 0 then
       for (i, c) in _children.pairs() do
-        if c.prefix(0) == ':' then
-          _children.delete(i)
+        if c.prefix(0)? == ':' then
+          _children.delete(i)?
           _children.push(c)
           break
         end
@@ -162,21 +162,21 @@ class _Node
   =>
     var path' = path
     for i in Range[ISize](0, prefix.size().isize()) do
-      if prefix(i.usize()) == ':' then
+      if prefix(i.usize())? == ':' then
         // store params
         let ns = try
-          path'.find("/", i.isize())
+          path'.find("/", i.isize())?
         else
           path'.size().isize()
         end
         let value = path'.substring(i, ns)
         if value == "" then error end
-        params(_params(i.usize())) = consume value
+        params(_params(i.usize())?) = consume value
         path' = path'.cut(i.isize(), ns)
-      elseif prefix(i.usize()) == '*' then
-        params(_params(i.usize())) = path'.substring(i)
+      elseif prefix(i.usize())? == '*' then
+        params(_params(i.usize())?) = path'.substring(i)
         path' = path'.cut(i.isize(), path'.size().isize())
-      elseif prefix(i.usize()) != path'(i.usize()) then
+      elseif prefix(i.usize())? != path'(i.usize())? then
         // not found
         error
       end
@@ -189,10 +189,10 @@ class _Node
     end
     // pass on to child
     for c in _children.values() do
-      match c.prefix(0)
-      | '*' => return c(consume remaining, consume params)
-      | ':' => return c(consume remaining, consume params)
-      | remaining(0) => return c(consume remaining, consume params)
+      match c.prefix(0)?
+      | '*' => return c(consume remaining, consume params)?
+      | ':' => return c(consume remaining, consume params)?
+      | remaining(0)? => return c(consume remaining, consume params)?
       end
     end
     // not found

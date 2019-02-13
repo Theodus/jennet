@@ -2,7 +2,7 @@
 // Use of this source code is governed by an MIT style
 // license that can be found in the LICENSE file.
 
-use "net/http"
+use "http"
 use "promises"
 
 class _ServerInfo is ServerNotify
@@ -13,17 +13,17 @@ class _ServerInfo is ServerNotify
       _out = out
       _responder = responder
 
-    fun ref listening(server: Server ref) =>
+    fun ref listening(server: HTTPServer ref) =>
       try
-        (let host, let service) = server.local_address().name()
+        (let host, let service) = server.local_address().name()?
         _out.print("Listening on " + host + ":" + service)
       else
         _out.print("Couldn't get local address.")
         server.dispose()
       end
 
-    fun ref not_listening(server: Server ref) =>
+    fun ref not_listening(server: HTTPServer ref) =>
       _out.print("Failed to listen.")
 
-    fun ref closed(server: Server ref) =>
+    fun ref closed(server: HTTPServer ref) =>
       _out.print("Shutdown.")

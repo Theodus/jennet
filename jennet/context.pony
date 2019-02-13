@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 use "collections"
-use "net/http"
+use "http"
 use "time"
 
 // TODO Separate map in context for iso values?
@@ -29,7 +29,7 @@ class iso Context
     found.
     """
     try
-      _params(key)
+      _params(key)?
     else
       ""
     end
@@ -38,7 +38,7 @@ class iso Context
     """
     Get the data corresponding to key.
     """
-    _data(key)
+    _data(key)?
 
   fun ref update(key: String, value: Any val) =>
     """
@@ -47,9 +47,9 @@ class iso Context
     """
     _data(key) = value
 
-  fun ref respond(req: Payload iso, res: Payload iso) =>
+  fun ref respond(req: Payload val, res: Payload val) =>
     """
     Respond to the given request with the response.
     """
     let response_time = Time.nanos() - _start_time
-    _responder(consume req, consume res, response_time)
+    _responder(req, res, response_time)
