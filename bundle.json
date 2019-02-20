@@ -1,9 +1,14 @@
 {
   "deps": [
     {
-      "tag": "master",
+      "tag": "0.2.0",
       "type": "github",
       "repo": "ponylang/http"
+    },
+    {
+      "tag": "master",
+      "type": "github",
+      "repo": "mfelsche/ponycheck"
     }
   ]
 }
