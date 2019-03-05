@@ -1,10 +1,8 @@
 # jennet [![Build Status](https://travis-ci.org/Theodus/jennet.svg?branch=master)](https://travis-ci.org/Theodus/jennet)
 
-Jennet is an HTTP web framework written in Pony
+Jennet is an HTTP web framework written in Pony compatible with Pony >= 0.27.0
 
 pony-stable: `{ "type": "github", "repo": "theodus/jennet" }`
-
-### Warning!!! This package is not yet compatible with ponyc > 0.10.0
 
 ## Features
 - **Context:** Store data that can be used by the request handler as well as any middleware.
@@ -36,13 +34,13 @@ actor Main
     jennet.get("/:name", H)
     
     try
-      (consume jennet).serve()
+      (consume jennet).serve()?
     else
       env.out.print("invalid routes.")
     end
 
 primitive H is Handler
-  fun apply(c: Context, req: Payload): Context iso^ =>
+  fun apply(c: Context, req: Payload val): Context iso^ =>
     let res = Payload.response()
     let name = c.param("name")
     res.add_chunk("Hello")
@@ -50,7 +48,7 @@ primitive H is Handler
       res.add_chunk(" " + name)
     end
     res.add_chunk("!")
-    c.respond(consume req, consume res)
+    c.respond(req, consume res)
     consume c
 ```
 
@@ -100,17 +98,17 @@ actor Main
     let jennet = Jennet(auth, env.out, "8080")
     jennet.get(
       "/",
-      {(c: Context, req: Payload): Context iso^ =>
+      {(c: Context, req: Payload val): Context iso^ =>
         let res = Payload.response()
         res.add_chunk("Hello!")
-        c.respond(consume req, consume res)
+        c.respond(req, consume res)
         consume c
       }, 
       middleware
     )
     
     try
-      (consume jennet).serve()
+      (consume jennet).serve()?
     else
       env.out.print("invalid routes.")
     end
@@ -134,7 +132,7 @@ actor Main
     jennet.serve_file(auth, "/", "/index.html")
     
     try
-      (consume jennet).serve()
+      (consume jennet).serve()?
     else
       env.out.print("invalid routes.")
     end
@@ -157,7 +155,7 @@ actor Main
     jennet.serve_dir(auth, "/fs/*filepath", "/static/")
     
     try
-      (consume jennet).serve()
+      (consume jennet).serve()?
     else
       env.out.print("invalid routes.")
     end

@@ -6,3 +6,4 @@ examples/params/params
 examples/servedir/servedir
 examples/servefile/servefile
 /.deps/
+/build/
