@@ -1,5 +1,4 @@
-# jennet [![Build Status](https://travis-ci.org/Theodus/jennet.svg?branch=master)](https://travis-ci.org/Theodus/jennet)
-
+# jennet [![CircleCI](https://circleci.com/gh/Theodus/jennet.svg?style=svg)](https://circleci.com/gh/Theodus/jennet)
 Jennet is an HTTP web framework written in Pony compatible with Pony >= 0.27.0
 
 pony-stable: `{ "type": "github", "repo": "theodus/jennet" }`
