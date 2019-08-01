@@ -11,6 +11,7 @@ ifeq ($(config),debug)
 endif
 
 PONYC_FLAGS += -o build/$(config)
+PONYC_FLAGS += -Dopenssl_1.1.x
 
 ALL: test
 
