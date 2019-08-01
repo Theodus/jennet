@@ -1,7 +1,7 @@
 {
   "deps": [
     {
-      "tag": "0.2.0",
+      "tag": "0.2.2",
       "type": "github",
       "repo": "ponylang/http"
     },
@@ -9,6 +9,14 @@
       "tag": "master",
       "type": "github",
       "repo": "mfelsche/ponycheck"
+    },
+    {
+      "type": "github",
+      "repo": "ponylang/net-ssl"
+    },
+    {
+      "type": "github",
+      "repo": "ponylang/crypto"
     }
   ]
 }
