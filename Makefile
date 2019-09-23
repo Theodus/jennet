@@ -13,9 +13,9 @@ endif
 PONYC_FLAGS += -o build/$(config)
 
 ifeq (,$(filter $(MAKECMDGOALS),clean))
-  ifeq ($(ssl), 1.1.x)
+  ifeq ($(ssl),1.1.x)
 	  PONYC_FLAGS += -Dopenssl_1.1.x
-  else ifeq ($(ssl), 0.9.0)
+  else ifeq ($(ssl),0.9.0)
 	  PONYC_FLAGS += -Dopenssl_0.9.0
   else
     $(error Unknown SSL version "$(ssl)". Must set using 'ssl=FOO')
