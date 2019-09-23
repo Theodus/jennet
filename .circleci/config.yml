@@ -1,9 +1,5 @@
 version: 2.1
 
-
-orbs:
-  zulip: ponylang/zulip@1
-
 jobs:
   vs-ponyc-release:
     docker:
@@ -14,8 +10,6 @@ jobs:
       - checkout
       - run: 
           make config=debug clean test examples && make config=release clean test examples
-      - zulip/status:
-          fail_only: true
 
   vs-ponyc-master:
     docker:
@@ -26,8 +20,6 @@ jobs:
       - checkout
       - run:
           make config=debug clean test examples && make config=release clean test examples
-      - zulip/status:
-          fail_only: true
 
 workflows:
   version: 2
