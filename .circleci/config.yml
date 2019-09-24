@@ -1,20 +1,25 @@
-version: 2
+version: 2.1
+
 jobs:
   vs-ponyc-release:
     docker:
       - image: ponylang/ponyc:release
     steps:
+      - run: apt update
+      - run: apt install -y libpcre2-dev libssl-dev
       - checkout
       - run: 
-          make config=debug clean test examples && make config=release clean test examples
+          make ssl=0.9.0 config=debug clean test examples && make ssl=0.9.0 config=release clean test examples
+
   vs-ponyc-master:
     docker:
       - image: ponylang/ponyc:latest
     steps:
+      - run: apt update
+      - run: apt install -y libpcre2-dev libssl-dev
       - checkout
       - run:
-          make config=debug clean test examples && make config=release clean test examples
-          
+          make ssl=0.9.0 config=debug clean test examples && make ssl=0.9.0 config=release clean test examples
 
 workflows:
   version: 2
