@@ -6,7 +6,7 @@ jobs:
       - image: ponylang/ponyc:release
     steps:
       - run: apt update
-      - run: apt install -y libpcre2-dev libssl-dev
+      - run: apt install -y libpcre2-dev libssl-dev make
       - checkout
       - run: 
           make ssl=0.9.0 config=debug clean test examples && make ssl=0.9.0 config=release clean test examples
@@ -16,7 +16,7 @@ jobs:
       - image: ponylang/ponyc:latest
     steps:
       - run: apt update
-      - run: apt install -y libpcre2-dev libssl-dev
+      - run: apt install -y libpcre2-dev libssl-dev make
       - checkout
       - run:
           make ssl=0.9.0 config=debug clean test examples && make ssl=0.9.0 config=release clean test examples
