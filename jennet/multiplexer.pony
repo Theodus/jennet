@@ -13,7 +13,7 @@ class iso _Multiplexer
       let method = r.method
       let hg = _HandlerGroup(r.hg.handler, r.hg.middlewares)
       if _methods.contains(method) then
-        _methods(method)?.add(r.path.clone(), hg)?
+        _methods(method) = _methods(method)?.add(r.path.clone(), hg)?
       else
         _methods(method) = _Node(r.path, hg)
       end
