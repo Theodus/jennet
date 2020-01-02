@@ -11,7 +11,9 @@ class Radix[A: Any val] // TODO: Any #share?
   fun ref update(path: String, value: A) ? =>
     let no_wild_name =
       try path.find("*")?.usize() == (path.size() - 1) else false end
-    if no_wild_name then error end
+    let no_param_name =
+      try path.find(":")?.usize() == (path.size() - 1) else false end
+    if no_wild_name or no_param_name then error end
 
     _root.add(path, value)
 
@@ -37,10 +39,10 @@ class Node[A: Any val, N: RadixNode = Normal]
       if prefix'.contains("*") then
         try prefix.append(prefix'.substring(0, prefix'.find("*")?)) end
         Debug(["  set wild"; prefix], " ")
-        add(prefix', terminal')
+        try _add_child(prefix'.substring(prefix'.find("*")?), terminal') end
       else
-        Debug(["  set"; prefix'], " ")
         prefix.append(prefix')
+        Debug(["  set"; prefix], " ")
         terminal = terminal'
       end
     elseif prefix == prefix' then
@@ -84,13 +86,13 @@ class Node[A: Any val, N: RadixNode = Normal]
     wild': (Node[A, Wild] | None) = None)
   =>
     if prefix'.contains("*") then
-      Debug(["  wild child"], " ")
       let c = recover ref Node[A, Wild] end
       try c.prefix.append(prefix'.substring(prefix'.find("*")? + 1)) end
+      Debug(["  wild child"; c.prefix], " ")
       for c' in children'.values() do c.children.push(c') end
       c.wild = wild'
       c.terminal = terminal'
-      if prefix' == "*" then
+      if (try prefix'(0)? == '*' else false end) then
         wild = consume c
       else
         let c' = recover ref Node[A] end
@@ -156,6 +158,7 @@ class Node[A: Any val, N: RadixNode = Normal]
           else ""
           end)
 
-type RadixNode is (Normal | Wild)
+type RadixNode is (Normal | Param | Wild)
 primitive Normal
+primitive Param
 primitive Wild
