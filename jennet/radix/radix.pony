@@ -3,23 +3,20 @@ use "itertools"
 
 use "debug" // TODO: remove
 
-// TODO: radix tree, param/wild matching
-
-type Result[A: Any val] is ((A | None), String)
+// TODO: param matching
 
 class Radix[A: Any val] // TODO: Any #share?
   embed _root: Node[A] = Node[A]
 
   fun ref update(path: String, value: A) ? =>
-    if path.contains("*") then
-      let wild_before_end =
-        try path.find("*")?.usize() != (path.size() - 1) else false end
-      if wild_before_end or (path.size() < 2) then error end
-    end
+    let no_wild_name =
+      try path.find("*")?.usize() == (path.size() - 1) else false end
+    if no_wild_name then error end
+
     _root.add(path, value)
 
-  fun apply(path: String): Result[A] =>
-    _root(path)
+  fun val apply(path: String, params: Map[String, String]): (A | None) =>
+    _root(path, params)
 
   fun string(): String iso^ =>
     _root.debug()
@@ -38,7 +35,7 @@ class Node[A: Any val, N: RadixNode = Normal]
     if prefix == "" then
       // empty prefix, set prefix
       if prefix'.contains("*") then
-        prefix.append(prefix'.substring(0, -1))
+        try prefix.append(prefix'.substring(0, prefix'.find("*")?)) end
         Debug(["  set wild"; prefix], " ")
         add(prefix', terminal')
       else
@@ -89,6 +86,7 @@ class Node[A: Any val, N: RadixNode = Normal]
     if prefix'.contains("*") then
       Debug(["  wild child"], " ")
       let c = recover ref Node[A, Wild] end
+      try c.prefix.append(prefix'.substring(prefix'.find("*")? + 1)) end
       for c' in children'.values() do c.children.push(c') end
       c.wild = wild'
       c.terminal = terminal'
@@ -96,7 +94,7 @@ class Node[A: Any val, N: RadixNode = Normal]
         wild = consume c
       else
         let c' = recover ref Node[A] end
-        c'.prefix.append(prefix'.substring(0, -1))
+        try c'.prefix.append(prefix'.substring(0, prefix'.find("*")?)) end
         c'.wild = consume c
         children.push(consume c')
       end
@@ -110,15 +108,16 @@ class Node[A: Any val, N: RadixNode = Normal]
       children.push(consume c)
     end
 
-  fun apply(path: String): Result[A] =>
+  fun val apply(path: String, params: Map[String, String]): (A | None) =>
     let len = common_prefix(path)
     Debug(["apply"; prefix; path; len], " ")
 
     iftype N <: Wild then
-      Debug(["  wild"], " ")
-      (terminal, path)
+      Debug(["  wild"; prefix], " ")
+      params(prefix) = path
+      terminal
     else
-      if path == prefix then return (terminal, "") end
+      if path == prefix then return terminal end
 
       for c in children.values() do
         let path' = path.trim(len)
@@ -126,13 +125,12 @@ class Node[A: Any val, N: RadixNode = Normal]
         Debug(["  check"; c.prefix; path'], " ")
         if c.prefix.size() <= len' then
           Debug(["  child"; path'], " ")
-          return c(path')
+          return c(path', consume params)
         end
       end
       match wild
-      | let c: Node[A, Wild] box => return c(path.trim(len))
+      | let c: Node[A, Wild] val => return c(path.trim(len), consume params)
       end
-      (None, "")
     end
 
   fun common_prefix(path: String box): USize =>
