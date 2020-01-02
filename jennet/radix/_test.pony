@@ -8,26 +8,34 @@ actor Main is TestList
 
   fun tag tests(test: PonyTest) =>
     test(_TestRadix)
-    test(Property1UnitTest[Array[String]](_TestRadix))
+    test(Property1UnitTest[Array[String]](_TestRadixBasic))
     test(Property1UnitTest[Array[String]](_TestWild))
 
-class _TestRadix is (UnitTest & Property1[Array[String]])
+class _TestRadix is UnitTest
   fun name(): String =>
     "radix/tree"
 
   fun apply(h: TestHelper) ? =>
-    for path in ["/"; "/abc"; "/abc/"; "/def"].values() do
-      let radix: Radix[USize] ref = Radix[USize]
+    h.assert_error({()? => Radix[USize]("/*")? = 0 })
+
+    let tests = ["/"; "/abc"; "/abc/"; "/def"]
+    for path in tests.values() do
+      let radix =
+        recover val Radix[USize] .> update("/abc", 0)? .> update(path, 1)? end
       let check_path =
         {(path: String, v: USize) ? =>
-          if (radix(path) as (USize, String))._1 != v then error end
+          let params = Map[String, String]
+          if (radix(path, params) as USize) != v then error end
+          if params.size() != 0 then error end
         }
-      radix("/abc")? = 0
-      radix(path)? = 1
       h.log(radix.string())
       check_path("/abc", if path == "/abc" then 1 else 0 end)?
       check_path(path, 1)?
     end
+
+class _TestRadixBasic is Property1[Array[String]]
+  fun name(): String =>
+    "radix/basic"
 
   fun gen(): Generator[Array[String]] =>
     Generators.array_of[String](_TestGen.url() where max = 100)
@@ -41,12 +49,15 @@ class _TestRadix is (UnitTest & Property1[Array[String]])
       radix(url)? = i
       h.log(radix.string())
     end
+    let radix' = consume val radix
 
     for (k, v) in table.pairs() do
-      match radix(k)
-      | (let v': USize, _) => h.assert_eq[USize](v, v')
-      | (None, _) => h.fail("not found: " + k)
+      let params = Map[String, String]
+      match radix'(k, params)
+      | let v': USize => h.assert_eq[USize](v, v')
+      | None => h.fail("not found: " + k)
       end
+      h.assert_eq[USize](params.size(), 0)
     end
 
 class _TestWild is Property1[Array[String]]
@@ -66,23 +77,23 @@ class _TestWild is Property1[Array[String]]
       radix(url)? = i
       table(url) = i
     end
-    radix(wild_url + "*")? = a.size()
+    radix(wild_url + "*w")? = a.size()
     h.log(radix.string())
+    let radix' = consume val radix
 
+    let params = Map[String, String]
     for (k, v) in table.pairs() do
-      match radix(k)
-      | (let v': USize, let w: String) =>
-        h.assert_eq[USize](v', v)
-        h.assert_eq[String](w, "")
-      | (None, _) =>
-        h.fail("not found: " + k)
+      match radix'(k, params)
+      | let v': USize => h.assert_eq[USize](v', v)
+      | None => h.fail("not found: " + k)
       end
+      h.assert_eq[USize](params.size(), 0)
     end
-    match radix(wild_url + wild_match)
-    | (let v': USize, let w: String) =>
+    match radix'(wild_url + wild_match, params)
+    | let v': USize =>
       h.assert_eq[USize](v', a.size())
-      h.assert_eq[String](w, wild_match)
-    | (None, _) =>
+      h.assert_eq[String](params("w")?, wild_match)
+    | None =>
       h.fail("not found: " + wild_url + wild_match)
     end
 
