@@ -32,8 +32,49 @@ class _TestRadix is UnitTest
       check_path(path, 1)?
     end
 
+    h.assert_error(
+      {()? =>
+        let radix_split =
+          recover val
+            Radix[USize] .> update("/abc", 0)? .> update("/adc", 1)?
+          end
+        radix_split("/a", Map[String, String]) as USize
+      })
+
     h.assert_error({()? => Radix[USize]("/*")? = 0 })
     h.assert_error({()? => Radix[USize]("/:")? = 0 })
+
+    let radix = Radix[Bool]
+    radix("/abc")? = false
+    radix("/a:bc/:d/*ef")? = true
+    radix("/a:bc")? = true
+    h.log(radix.string())
+    let radix' = consume val radix
+
+    let params = Map[String, String]
+    match radix'("/abc", params)
+    | let v: Bool => h.assert_false(v)
+    | None => h.fail("not found: /abc")
+    end
+    h.assert_eq[USize](params.size(), 0)
+
+    match radix'("/acb/q/fe", params)
+    | let v: Bool =>
+      h.assert_true(v)
+      h.assert_eq[USize](params.size(), 3)
+      h.assert_eq[String](params("bc")?, "cb")
+      h.assert_eq[String](params("d")?, "q")
+      h.assert_eq[String](params("ef")?, "fe")
+    | None => h.fail("not found: /acb/q/fe")
+    end
+    params.clear()
+    match radix'("/acb", params)
+    | let v: Bool =>
+      h.assert_true(v)
+      h.assert_eq[USize](params.size(), 1)
+      h.assert_eq[String](params("bc")?, "cb")
+    | None => h.fail("not found: /acb")
+    end
 
 class _TestRadixBasic is Property1[Array[String]]
   fun name(): String =>
@@ -76,19 +117,27 @@ class _TestRadixWild is Property1[Array[String]]
 
     let radix = Radix[USize]
     radix(g(0)?)? = 0
-    radix(wild_url + "*w")? = 1
-    radix(g(1)?)? = 2
+    radix(wild_url + "*w")? = 2
+    radix(g(1)?)? = 1
     h.log(radix.string())
     let radix' = consume val radix
 
     let params = Map[String, String]
-    h.assert_eq[USize](radix'(g(0)?, params) as USize, 0)
-    h.assert_eq[USize](params.size(), 0)
-    h.assert_eq[USize](radix'(g(1)?, params) as USize, 2)
-    h.assert_eq[USize](params.size(), 0)
-    h.assert_eq[USize](radix'(wild_url + wild_match, params) as USize, 1)
-    h.assert_eq[USize](params.size(), 1)
-    h.assert_eq[String](params("w")?, wild_match)
+    for i in g.keys() do
+      match radix'(g(i)?, params)
+      | let v: USize => h.assert_eq[USize](v, i)
+      | None => h.fail("not found: " + g(i)?)
+      end
+      h.assert_eq[USize](params.size(), 0)
+    end
+    match radix'(wild_url + wild_match, params)
+    | let v: USize =>
+      h.assert_eq[USize](v, 2)
+      h.assert_eq[USize](params.size(), 1)
+      h.assert_eq[String](params("w")?, wild_match)
+    | None =>
+      h.fail("not found: " + wild_url + wild_match)
+    end
 
 class _TestRadixParam is Property1[Array[String]]
   fun name(): String =>
@@ -110,19 +159,27 @@ class _TestRadixParam is Property1[Array[String]]
 
     let radix = Radix[USize]
     radix(g(0)?)? = 0
-    radix(param_url)? = 1
-    radix(g(1)?)? = 2
+    radix(param_url)? = 2
+    radix(g(1)?)? = 1
     h.log(radix.string())
     let radix' = consume val radix
 
     let params = Map[String, String]
-    h.assert_eq[USize](radix'(g(0)?, params) as USize, 0)
-    h.assert_eq[USize](params.size(), 0)
-    h.assert_eq[USize](radix'(g(1)?, params) as USize, 2)
-    h.assert_eq[USize](params.size(), 0)
-    h.assert_eq[USize](radix'(param_base, params) as USize, 1)
-    h.assert_eq[USize](params.size(), 1)
-    h.assert_eq[String](params(param_name)?, param_name)
+    for i in g.keys() do
+      match radix'(g(i)?, params)
+      | let v: USize => h.assert_eq[USize](v, i)
+      | None => h.fail("not found: " + g(i)?)
+      end
+      h.assert_eq[USize](params.size(), 0)
+    end
+    match radix'(param_base, params)
+    | let v: USize =>
+      h.assert_eq[USize](v, 2)
+      h.assert_eq[USize](params.size(), 1)
+      h.assert_eq[String](params(param_name)?, param_name)
+    | None =>
+      h.fail("not found: " + param_base)
+    end
 
 primitive _TestGen
   fun url(): Generator[String] =>
