@@ -46,6 +46,7 @@ class _TestRadix is UnitTest
 
     h.assert_error({()? => Radix[USize]("/*")? = 0 })
     h.assert_error({()? => Radix[USize]("/:")? = 0 })
+    h.assert_error({()? => Radix[USize]("/:a/:/")? = 0 })
 
     let radix = Radix[Bool]
     radix("/abc")? = false

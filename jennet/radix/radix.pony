@@ -1,18 +1,23 @@
 use "collections"
 use "itertools"
 
-use "debug" // TODO: remove
-
 class Radix[A: Any val]
   embed _root: Node[A] = Node[A]
 
   fun ref update(path: String, value: A) ? =>
-    // TODO: use extract_name
-    let no_wild_name =
-      try path.find("*")?.usize() == (path.size() - 1) else false end
-    let no_param_name =
-      try path.find(":")?.usize() == (path.size() - 1) else false end
-    if no_wild_name or no_param_name then error end
+    var check_path = path
+    while true do
+      let param_start =
+        if check_path.contains(":") then check_path.find(":")? + 1
+        elseif check_path.contains("*") then check_path.find("*")? + 1
+        else break
+        end
+      let param = _root.extract_name(check_path, param_start.usize())
+      match param
+      | "" | "/" | ":" | "*" => error
+      end
+      check_path = check_path.trim(param_start.usize() + param.size())
+    end
 
     _root.add(path, value)
 
@@ -31,22 +36,18 @@ class Node[A: Any val, N: RadixNode = Normal]
   fun ref add(prefix': String, terminal': (A | None))
   =>
     let len = common_prefix(prefix')
-    Debug(["add"; prefix; prefix'; len], " ")
 
     if prefix == "" then
       // empty prefix, set prefix
       if prefix'.contains("*") then
         try prefix.append(prefix'.substring(0, prefix'.find("*")?)) end
-        Debug(["  set wild"; prefix], " ")
         try _add_child(prefix'.substring(prefix'.find("*")?), terminal') end
       else
         prefix.append(prefix')
-        Debug(["  set"; prefix], " ")
         terminal = terminal'
       end
     elseif prefix == prefix' then
       // equal prefix, replace terminal
-      Debug(["  update"], " ")
       terminal = terminal'
     elseif len == prefix.size() then
       // prefix match, search children
@@ -60,7 +61,6 @@ class Node[A: Any val, N: RadixNode = Normal]
       end
       if (try prefix'(len)? == ':' else false end) then
         let rest = prefix'.trim(len + 1)
-        Debug(["  param"; rest], " ")
         match param
         | let p: Node[A, Param] => return p.add(rest, terminal')
         end
@@ -76,7 +76,6 @@ class Node[A: Any val, N: RadixNode = Normal]
 
       children.remove(0, children.size() - 1)
       prefix.trim_in_place(0, len)
-      Debug(["  set"; prefix], " ")
 
       if len != prefix'.size() then
         // prefix' is not substring, split prefix
@@ -96,20 +95,17 @@ class Node[A: Any val, N: RadixNode = Normal]
       if name_start != 1 then
         let c = recover ref Node[A] end
         c.prefix.append(prefix'.trim(0, name_start - 1))
-        Debug(["  child"; c.prefix], " ")
         c._add_child(prefix'.trim(name_start - 1), terminal')
         children.push(consume c)
       else
         let c = recover ref Node[A, Param] end
         c.prefix.append(extract_name(prefix', name_start))
-        Debug(["  param child"; c.prefix], " ")
         let rest = prefix'.trim(name_start.usize() + c.prefix.size())
         if rest == "" then
           c.terminal = terminal'
           for c' in children'.values() do c.children.push(c') end
           c.param = param'
         else
-          Debug(["  rest"; rest], " ")
           c._add_child(rest, terminal', children', param')
         end
         param = consume c
@@ -120,17 +116,14 @@ class Node[A: Any val, N: RadixNode = Normal]
         let c = recover ref Node[A] end
         c.prefix.append(prefix'.trim(0, name_start - 1))
         c._add_child(prefix'.trim(name_start - 1), terminal')
-        Debug(["  child"; c.prefix], " ")
         children.push(consume c)
       else
         let c = recover ref Node[A, Wild] end
         c.prefix.append(extract_name(prefix', name_start))
-        Debug(["  wild child"; c.prefix], " ")
         c.terminal = terminal'
         param = consume c
       end
     else
-      Debug(["  child"; prefix'], " ")
       let c = recover ref Node[A] end
       c.prefix.append(prefix')
       c.terminal = terminal'
@@ -142,18 +135,15 @@ class Node[A: Any val, N: RadixNode = Normal]
   fun val apply(path: String, params: Map[String, String]): (A | None) =>
     iftype N <: Param then
       let value = extract_name(path, 0)
-      Debug(["  param"; prefix; value], " ")
       params(prefix) = value
       if value == path
       then terminal
       else search(path.trim(value.size()), params)
       end
     elseif N <: Wild then
-      Debug(["  wild"; prefix], " ")
       params(prefix) = path
       terminal
     else
-      Debug(["apply"; prefix; path], " ")
       if path == prefix then return terminal end
       search(path, params)
     end
@@ -163,9 +153,7 @@ class Node[A: Any val, N: RadixNode = Normal]
     for c in children.values() do
       let path' = path.trim(len)
       let len' = c.common_prefix(path') // TODO: pass down len'
-      Debug(["  check"; c.prefix; path'], " ")
       if c.prefix.size() <= len' then
-        Debug(["  child"; path'], " ")
         return c(path', consume params)
       end
     end
@@ -173,7 +161,6 @@ class Node[A: Any val, N: RadixNode = Normal]
     | let p: Node[A, Param] val => return p(path.trim(len), consume params)
     | let w: Node[A, Wild] val => return w(path.trim(len), consume params)
     end
-    Debug(["  not found"], " ")
 
   fun common_prefix(path: String box): USize =>
     var i: USize = 0

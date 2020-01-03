@@ -19,17 +19,17 @@ class val _Mux
       _methods(method)?(r.path.clone())? = hg
     end
 
-  // TODO: no unwind
   fun val apply(method: String, path: String, params: Map[String, String])
-    : _HandlerGroup ?
+    : (_HandlerGroup | None)
   =>
-    let path' =
-      if path(0)? != '/' then
-        let p = recover String(path.size() + 1) end
-        p.append("/")
-        p.append(path)
-        p
-      else
-        path
+    try
+      let path' =
+        if (path.size() == 0) or (path(0)? != '/')
+        then recover String(path.size() + 1) .> append("/") .> append(path) end
+        else consume path
+        end
+
+      match _methods(method)?(consume path', params)
+      | let hg: _HandlerGroup => hg
       end
-    _methods(method)?(consume path', params) as _HandlerGroup
+    end
