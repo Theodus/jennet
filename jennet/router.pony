@@ -2,27 +2,28 @@ use "collections"
 use "http"
 
 class val _Router is HTTPHandler
-  let _mux: _Multiplexer val
+  let _mux: _Mux
   let _responder: Responder
   let _notfound: _HandlerGroup
 
-  new create(mux: _Multiplexer val, responder: Responder,
-    notfound: _HandlerGroup)
-  =>
+  new create(mux: _Mux, responder: Responder, notfound: _HandlerGroup) =>
     _mux = mux
     _responder = responder
     _notfound = notfound
 
   fun ref apply(request: Payload val) =>
-    (let hg, let c) = try
-      (let hg, let params) = _mux(request.method, request.url.path)?
-      let c = Context(_responder, consume params)
-      (hg, consume c)
-    else
-      (_notfound, Context(_responder, recover Map[String, String] end))
-    end
+    (let hg, let params: Map[String, String] val) =
+      try
+        recover
+          let params = Map[String, String]
+          let hg = _mux(request.method, request.url.path, params)?
+          (hg, params)
+        end
+      else
+        (_notfound, recover Map[String, String] end)
+      end
     try
-      hg(consume c, consume request)?
+      hg(Context(_responder, consume params), consume request)?
     end
 
 primitive _UnavailableFactory is HandlerFactory

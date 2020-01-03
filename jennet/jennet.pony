@@ -125,7 +125,7 @@ class iso Jennet
     """
     Serve incomming HTTP requests.
     """
-    let mux = _Multiplexer(_routes)?
+    let mux = _Mux(_routes)?
     let router_factory = _RouterFactory(consume mux, _responder, _notfound)
     _server.set_handler(router_factory)
 
@@ -143,12 +143,12 @@ class iso Jennet
     _routes.push(route)
 
 class val _RouterFactory
-  let _mux: _Multiplexer val
+  let _mux: _Mux
   let _responder: Responder
   let _not_found: _HandlerGroup
 
   new val create(
-    mux: _Multiplexer val,
+    mux: _Mux,
     responder: Responder,
     not_found: _HandlerGroup) =>
     _mux = mux

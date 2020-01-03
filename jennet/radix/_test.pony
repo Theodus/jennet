@@ -6,6 +6,9 @@ actor Main is TestList
   new create(env: Env) =>
     PonyTest(env, this)
 
+  new make() =>
+    None
+
   fun tag tests(test: PonyTest) =>
     test(_TestRadix)
     test(Property1UnitTest[Array[String]](_TestRadixBasic))

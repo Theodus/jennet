@@ -2,58 +2,14 @@ use "collections"
 use "encode/base64"
 use "http"
 use "ponytest"
+use radix = "radix"
 
 actor Main is TestList
   new create(env: Env) => PonyTest(env, this)
-  new make() => None
 
   fun tag tests(test: PonyTest) =>
-    test(_TestMultiplexer)
+    radix.Main.make().tests(test)
     test(_TestBasicAuth)
-
-class iso _TestMultiplexer is UnitTest
-  fun name(): String => "Multiplexer"
-
-  fun apply(h: TestHelper) ? =>
-    let ts = recover Array[(String, _HandlerGroup)] end
-    ts.push(("/", _HandlerGroup(_TestHandler("0"))))
-    ts.push(("/foo", _HandlerGroup(_TestHandler("1"))))
-    ts.push(("/:foo", _HandlerGroup(_TestHandler("2"))))
-    ts.push(("/foo/bar/", _HandlerGroup(_TestHandler("3"))))
-    ts.push(("/baz/bar", _HandlerGroup(_TestHandler("4"))))
-    ts.push(("/:foo/baz", _HandlerGroup(_TestHandler("5"))))
-    ts.push(("/foo/bar/*baz", _HandlerGroup(_TestHandler("6"))))
-    let tests = recover val consume ts end
-    let routes = recover Array[_Route] end
-    for (p, hg) in tests.values() do
-      routes.push(_Route("GET", p, hg))
-    end
-    let mux = recover val _Multiplexer(consume routes)? end
-
-    (var hg, var ps) = mux("GET", "/")?
-    h.assert_eq[String]("0", (hg.handler as _TestHandler val).msg)
-
-    (hg, ps) = mux("GET", "/foo")?
-    h.assert_eq[String]("1", (hg.handler as _TestHandler val).msg)
-
-    (hg, ps) = mux("GET", "/stuff")? // TODO error in non-debug mode
-    h.assert_eq[String]("2", (hg.handler as _TestHandler val).msg)
-    h.assert_eq[String]("stuff", ps("foo")?)
-
-    h.assert_error({()(mux) ? => mux("GET", "/foo/bar")? })
-    (hg, ps) = mux("GET", "/foo/bar/")?
-    h.assert_eq[String]("3", (hg.handler as _TestHandler val).msg)
-
-    (hg, ps) = mux("GET", "/baz/bar")?
-    h.assert_eq[String]("4", (hg.handler as _TestHandler val).msg)
-
-    (hg, ps) = mux("GET", "/stuff/baz")?
-    h.assert_eq[String]("5", (hg.handler as _TestHandler val).msg)
-    h.assert_eq[String]("stuff", ps("foo")?)
-
-    (hg, ps) = mux("GET", "/foo/bar/stuff/and/things")?
-    h.assert_eq[String]("6", (hg.handler as _TestHandler val).msg)
-    h.assert_eq[String]("stuff/and/things", ps("baz")?)
 
 class iso _TestBasicAuth is UnitTest
   fun name(): String => "BasicAuth"
