@@ -133,6 +133,7 @@ class Node[A: Any val, N: RadixNode = Normal]
     end
 
   fun val apply(path: String, params: Map[String, String]): (A | None) =>
+    if path == "" then return end
     iftype N <: Param then
       let value = extract_name(path, 0)
       params(prefix) = value

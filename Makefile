@@ -33,7 +33,7 @@ build:
 	stable fetch
 
 test: build/$(config)/test
-	build/$(config)/test
+	build/$(config)/test $(PONYTEST_ARGS)
 
 examples: .deps build jennet/*.pony jennet/radix/*.pony examples/*/*.pony
 	stable env ${PONYC} ${PONYC_FLAGS} examples/basicauth

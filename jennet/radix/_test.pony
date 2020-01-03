@@ -37,6 +37,14 @@ class _TestRadix is UnitTest
 
     h.assert_error(
       {()? =>
+        let radix_overmatch =
+          recover val Radix[USize] .> update("/fs/*f", 0)? end
+        h.log(radix_overmatch.string())
+        radix_overmatch("/", Map[String, String]) as USize
+      })
+
+    h.assert_error(
+      {()? =>
         let radix_split =
           recover val
             Radix[USize] .> update("/abc", 0)? .> update("/adc", 1)?
