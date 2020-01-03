@@ -2,20 +2,18 @@ use "collections"
 use "http"
 use "time"
 
-// TODO Separate map in context for iso values?
-
 class iso Context
   """
   Contains the data passed between middleware and the handler.
   """
   let _responder: Responder
-  let _params: Map[String, String]
+  let _params: Map[String, String] val
   let _data: Map[String, Any val]
   let _start_time: U64
 
-  new iso create(responder': Responder, params': Map[String, String] iso) =>
+  new iso create(responder': Responder, params': Map[String, String] val) =>
     _responder = responder'
-    _params = consume params'
+    _params = params'
     _data = Map[String, Any val]
     _start_time = Time.nanos()
 
