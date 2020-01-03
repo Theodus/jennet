@@ -13,14 +13,12 @@ class val _Router is HTTPHandler
 
   fun ref apply(request: Payload val) =>
     (let hg, let params: Map[String, String] val) =
-      try
-        recover
-          let params = Map[String, String]
-          let hg = _mux(request.method, request.url.path, params)?
-          (hg, params)
+      recover
+        let params = Map[String, String]
+        match _mux(request.method, request.url.path, params)
+        | let hg: _HandlerGroup => (hg, params)
+        | None => (_notfound, params)
         end
-      else
-        (_notfound, recover Map[String, String] end)
       end
     try
       hg(Context(_responder, consume params), consume request)?
