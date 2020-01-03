@@ -26,9 +26,6 @@ build/$(config)/test: PONYC_FLAGS += --bin-name=test
 build/$(config)/test: .deps build jennet/*.pony jennet/radix/*.pony
 	stable env ${PONYC} ${PONYC_FLAGS} jennet
 
-build/$(config):
-	mkdir -p build/$(config)
-
 build:
 	mkdir -p build/$(config)
 
@@ -38,7 +35,7 @@ build:
 test: build/$(config)/test
 	build/$(config)/test
 
-examples: build/$(config) .deps build jennet/*.pony jennet/radix/*.pony examples/*/*.pony
+examples: .deps build jennet/*.pony jennet/radix/*.pony examples/*/*.pony
 	stable env ${PONYC} ${PONYC_FLAGS} examples/basicauth
 	stable env ${PONYC} ${PONYC_FLAGS} examples/params
 	stable env ${PONYC} ${PONYC_FLAGS} examples/servedir
@@ -47,4 +44,4 @@ examples: build/$(config) .deps build jennet/*.pony jennet/radix/*.pony examples
 clean:
 	rm -rf build
 
-.PHONY: clean test
+.PHONY: clean test examples

@@ -1,5 +1,6 @@
 use "collections"
 use "http"
+use "itertools"
 use "radix"
 
 // TODO weight optimization
@@ -33,3 +34,7 @@ class val _Mux
       | let hg: _HandlerGroup => hg
       end
     end
+
+  fun debug(): String iso^ =>
+    "\n".join(Iter[(String, Radix[_HandlerGroup] box)](_methods.pairs())
+      .map[String]({(p) => p._1 + "\n" + p._2.string() }))

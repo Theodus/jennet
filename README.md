@@ -19,24 +19,26 @@ pony-stable: `{ "type": "github", "repo": "theodus/jennet" }`
 ### Named Parameters
 
 ```pony
+use "http"
+use "jennet"
+
 actor Main
   new create(env: Env) =>
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.out.print("unable to use network.")
-      return
-    end
+    let auth =
+      try
+        env.root as AmbientAuth
+      else
+        env.out.print("unable to use network.")
+        return
+      end
 
-    let jennet = Jennet(auth, env.out, "8080")
-    jennet.get("/", H)
-    jennet.get("/:name", H)
+    let j =
+      Jennet(auth, env.out, "8080")
+        .> get("/", H)
+        .> get("/:name", H)
 
-    try
-      (consume jennet).serve()?
-    else
-      env.out.print("invalid routes!")
-    end
+    let j' = consume val j
+    try j'.serve()? else j'.dispose() end
 
 primitive H is Handler
   fun apply(c: Context, req: Payload val): Context iso^ =>
@@ -79,38 +81,38 @@ see also: [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter
 ### Using Middleware
 
 ```pony
+use "collections"
+use "http"
+use "jennet"
+
 actor Main
   new create(env: Env) =>
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.out.print("unable to use network.")
-      return
-    end
+    let auth =
+      try
+        env.root as AmbientAuth
+      else
+        env.out.print("unable to use network.")
+        return
+      end
 
-    let users = recover Map[String, String](1) end
-    users("my_username") = "my_super_secret_password"
-    let middleware = recover val
-      [as Middleware: BasicAuth("My Realm", consume users)]
-    end
-
-    let jennet = Jennet(auth, env.out, "8080")
-    jennet.get(
-      "/",
+    let handler =
       {(c: Context, req: Payload val): Context iso^ =>
         let res = Payload.response()
         res.add_chunk("Hello!")
         c.respond(req, consume res)
         consume c
-      },
-      middleware
-    )
+      }
 
-    try
-      (consume jennet).serve()?
-    else
-      env.out.print("invalid routes.")
-    end
+    let users = recover Map[String, String](1) end
+    users("my_username") = "my_super_secret_password"
+    let authenticator = BasicAuth("My Realm", consume users)
+
+    let j =
+      Jennet(auth, env.out, "8080")
+        .> get("/", handler, [authenticator])
+
+    let j' = consume val j
+    try j'.serve()? else j'.dispose() end
 ```
 
 This example uses Basic Authentication (RFC 2617) with the included BasicAuth middleware.
@@ -118,44 +120,55 @@ This example uses Basic Authentication (RFC 2617) with the included BasicAuth mi
 ### Serving Static Files
 
 ```pony
+use "http"
+use "jennet"
+
 actor Main
   new create(env: Env) =>
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.out.print("unable to use network.")
-      return
-    end
+    let auth =
+      try
+        env.root as AmbientAuth
+      else
+        env.out.print("unable to use network.")
+        return
+      end
 
-    let jennet = Jennet(auth, env.out, "8080")
-    jennet.serve_file(auth, "/", "/index.html")
-
+    let j = Jennet(auth, env.out, "8080")
     try
-      (consume jennet).serve()?
+      j.serve_file(auth, "/", "index.html")?
     else
       env.out.print("invalid routes.")
+      j.dispose()
     end
+    let j' = consume val j
+    try j'.serve()? else j'.dispose() end
 ```
 
 ### Serving Static Directory
 
 ```pony
+use "http"
+use "files"
+use "jennet"
+
 actor Main
   new create(env: Env) =>
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.out.print("unable to use network.")
-      return
-    end
+    let auth =
+      try
+        env.root as AmbientAuth
+      else
+        env.out.print("unable to use network.")
+        return
+      end
 
-    let jennet = Jennet(auth, env.out, "8080")
-    // a request to /fs/index.html would return /static/index.html
-    jennet.serve_dir(auth, "/fs/*filepath", "/static/")
-
+    let j = Jennet(auth, env.out, "8080")
     try
-      (consume jennet).serve()?
+      // a request to /fs/index.html would return ./static/index.html
+      j.serve_dir(auth, "/fs/*filepath", "static/")?
     else
-      env.out.print("invalid routes.")
+      env.out.print("Invalid routes!")
+      j.dispose()
     end
+    let j' = consume val j
+    try j'.serve()? else j'.dispose() end
 ```

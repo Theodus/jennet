@@ -3,18 +3,20 @@ use "../../jennet"
 
 actor Main
   new create(env: Env) =>
-    let auth = try
-      env.root as AmbientAuth
-    else
-      env.out.print("unable to use network.")
-      return
-    end
+    let auth =
+      try
+        env.root as AmbientAuth
+      else
+        env.out.print("unable to use network.")
+        return
+      end
 
-    let jennet = Jennet(auth, env.out, "8080")
-    jennet.serve_file(auth, "/", "index.html")
-
+    let j = Jennet(auth, env.out, "8080")
     try
-      (consume jennet).serve()?
+      j.serve_file(auth, "/", "index.html")?
     else
       env.out.print("invalid routes.")
+      j.dispose()
     end
+    let j' = consume val j
+    try j'.serve()? else j'.dispose() end

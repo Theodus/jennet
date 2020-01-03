@@ -2,55 +2,46 @@ use "files"
 use "http"
 
 class _FileServer is Handler
-  let _auth: AmbientAuth
-  let _filepath: String
+  let _filepath: FilePath
 
-  new val create(auth: AmbientAuth, filepath: String) =>
-    _auth = auth
-    _filepath = Path.abs(filepath)
+  new val create(filepath: FilePath) =>
+    _filepath = filepath
 
   fun val apply(c: Context, req: Payload val): Context iso^ =>
-    let caps = recover val FileCaps.>set(FileRead).>set(FileStat) end
-    let res = try
-      let r = Payload.response()
-      with
-        file = OpenFile(FilePath(_auth, _filepath, caps)?) as File
-      do
-        for line in file.lines() do
-          r.add_chunk(consume line)
+    let res =
+      try
+        let r = Payload.response()
+        with file = OpenFile(_filepath) as File do
+          for line in file.lines() do
+            r.add_chunk(consume line)
+          end
         end
+        consume r
+      else
+        _NotFoundRes()
       end
-      consume r
-    else
-      _NotFoundRes()
-    end
     c.respond(req, consume res)
     consume c
 
 class _DirServer is Handler
-  let _auth: AmbientAuth
-  let _dir: String
+  let _dir: FilePath
 
-  new val create(auth: AmbientAuth, dir: String) =>
-    _auth = auth
-    _dir = Path.abs(dir)
+  new val create(dir: FilePath) =>
+    _dir = dir
 
   fun val apply(c: Context, req: Payload val): Context iso^ =>
-    let caps = recover val FileCaps.>set(FileRead).>set(FileStat) end
     let filepath = c.param("filepath")
-    let res = try
-      let r = Payload.response()
-      let path = Path.join(_dir, filepath)
-      with
-        file = OpenFile(FilePath(_auth, path, caps)?) as File
-      do
-        for line in file.lines() do
-          r.add_chunk(consume line)
+    let res =
+      try
+        let r = Payload.response()
+        with file = OpenFile(_dir.join(filepath)?) as File do
+          for line in file.lines() do
+            r.add_chunk(consume line)
+          end
         end
+        consume r
+      else
+        _NotFoundRes()
       end
-      consume r
-    else
-      _NotFoundRes()
-    end
     c.respond(req, consume res)
     consume c

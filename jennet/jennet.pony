@@ -1,6 +1,7 @@
 use "collections"
-use "net"
+use "files"
 use "http"
+use "net"
 
 class iso Jennet
   let _server: HTTPServer
@@ -18,17 +19,17 @@ class iso Jennet
     service: String,
     responder: (Responder | None) = None)
   =>
-    _responder = match responder
-    | let r: Responder => r
-    else DefaultResponder(out)
-    end
+    _responder =
+      match responder
+      | let r: Responder => r
+      else DefaultResponder(out)
+      end
     _server = HTTPServer(
       auth,
       _ServerInfo(out, _responder),
       _UnavailableFactory,
       DiscardLog
-      where service = service, reversedns = auth
-    )
+      where service = service, reversedns = auth)
     _out = out
     _auth = auth
 
@@ -86,28 +87,21 @@ class iso Jennet
     """
     _add_route("OPTIONS", path, handler, middlewares)
 
-  fun ref serve_file(auth: AmbientAuth, path: String, filepath: String) =>
+  fun ref serve_file(auth: AmbientAuth, path: String, filepath: String) ? =>
     """
     Serve static file located at the relative filepath when GET requests are
     received for the given path.
-
-    filepath should be absolute, otherwise it is considered
-    relative to the current working directory of the jennet process.
     """
-    _add_route("GET", path, _FileServer(auth, filepath),
-      recover Array[Middleware] end)
+    let caps = recover val FileCaps + FileRead + FileStat end
+    _add_route("GET", path, _FileServer(FilePath(auth, filepath, caps)?), [])
 
-  fun ref serve_dir(auth: AmbientAuth, path: String, dir: String) =>
+  fun ref serve_dir(auth: AmbientAuth, path: String, dir: String) ? =>
     """
     Serve all files in dir using the incomming url path suffix denoted by
-    *filepath in the given path.
-
-    path must be in the form of: "/some_dir/*filepath".
-    dir should be absolute, otherwise it is considered relative
-    to the current working directory of the jennet process,
+    `*filepath` in the given path.
     """
-    _add_route("GET", path, _DirServer(auth, dir),
-      recover Array[Middleware] end)
+    let caps = recover val FileCaps + FileRead + FileStat + FileLookup end
+    _add_route("GET", path, _DirServer(FilePath(auth, dir, caps)?), [])
 
   fun ref not_found(handler: Handler) =>
     """
@@ -121,13 +115,17 @@ class iso Jennet
     """
     _base_middlewares = mw
 
-  fun val serve() ? =>
+  fun val serve(dump_routes: Bool = false) ? =>
     """
     Serve incomming HTTP requests.
     """
     let mux = _Mux(_routes)?
+    if dump_routes then _out.print(mux.debug()) end
     let router_factory = _RouterFactory(consume mux, _responder, _notfound)
     _server.set_handler(router_factory)
+
+  fun dispose() =>
+    _server.dispose()
 
   fun ref _add_route(method: String, path: String,
     handler: Handler, middlewares: Array[Middleware] val)
