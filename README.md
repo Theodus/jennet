@@ -1,5 +1,5 @@
 # jennet [![CircleCI](https://circleci.com/gh/Theodus/jennet.svg?style=svg)](https://circleci.com/gh/Theodus/jennet)
-Jennet is an HTTP web framework written in Pony compatible with Pony >= 0.27.0
+A simple HTTP web framework written in Pony
 
 pony-stable: `{ "type": "github", "repo": "theodus/jennet" }`
 
@@ -27,15 +27,15 @@ actor Main
       env.out.print("unable to use network.")
       return
     end
-    
+
     let jennet = Jennet(auth, env.out, "8080")
     jennet.get("/", H)
     jennet.get("/:name", H)
-    
+
     try
       (consume jennet).serve()?
     else
-      env.out.print("invalid routes.")
+      env.out.print("invalid routes!")
     end
 
 primitive H is Handler
@@ -67,9 +67,9 @@ There are also catch-all parameters that may be used at the end of a path:
 ```
 Pattern: /src/*filepath
 
- /src/                     match
- /src/somefile.go          match
- /src/subdir/somefile.go   match
+ /src/                       match
+ /src/somefile.html          match
+ /src/subdir/somefile.pony   match
 ```
 
 The router uses a compact prefix tree algorithm (or [Radix Tree](https://en.wikipedia.org/wiki/Radix_tree)) since URL paths have a hierarchical structure and only make use of a limited set of characters (byte values). It is very likely that there are a lot of common prefixes, which allows us to easily match incoming URL paths.
@@ -87,13 +87,13 @@ actor Main
       env.out.print("unable to use network.")
       return
     end
-    
+
     let users = recover Map[String, String](1) end
     users("my_username") = "my_super_secret_password"
     let middleware = recover val
       [as Middleware: BasicAuth("My Realm", consume users)]
     end
-    
+
     let jennet = Jennet(auth, env.out, "8080")
     jennet.get(
       "/",
@@ -102,10 +102,10 @@ actor Main
         res.add_chunk("Hello!")
         c.respond(req, consume res)
         consume c
-      }, 
+      },
       middleware
     )
-    
+
     try
       (consume jennet).serve()?
     else
@@ -126,10 +126,10 @@ actor Main
       env.out.print("unable to use network.")
       return
     end
-    
+
     let jennet = Jennet(auth, env.out, "8080")
     jennet.serve_file(auth, "/", "/index.html")
-    
+
     try
       (consume jennet).serve()?
     else
@@ -152,7 +152,7 @@ actor Main
     let jennet = Jennet(auth, env.out, "8080")
     // a request to /fs/index.html would return /static/index.html
     jennet.serve_dir(auth, "/fs/*filepath", "/static/")
-    
+
     try
       (consume jennet).serve()?
     else
