@@ -13,20 +13,18 @@ actor Main
       end
 
     let handler =
-      {(c: Context, req: Payload val): Context iso^ =>
-        let res = Payload.response()
-        res.add_chunk("Hello!")
-        c.respond(req, consume res)
-        consume c
+      {(ctx: Context): Context iso^ =>
+        ctx.respond(StatusResponse(StatusOK), "Hello!".array())
+        consume ctx
       }
 
     let users = recover Map[String, String](1) end
     users("my_username") = "my_super_secret_password"
     let authenticator = BasicAuth("My Realm", consume users)
 
-    let j =
-      Jennet(auth, env.out, "8080")
+    let server =
+      Jennet(auth, env.out)
         .> get("/", handler, [authenticator])
+        .serve(ServerConfig(where port' = "8080"))
 
-    let j' = consume val j
-    try j'.serve()? else j'.dispose() end
+    if server is None then env.out.print("bad routes!") end

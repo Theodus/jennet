@@ -11,22 +11,20 @@ actor Main
         return
       end
 
-    let j =
-      Jennet(auth, env.out, "8080")
+    let server =
+      Jennet(auth, env.out)
         .> get("/", H)
         .> get("/:name", H)
+        .serve(ServerConfig(where port' = "8080"))
 
-    let j' = consume val j
-    try j'.serve()? else j'.dispose() end
+    if server is None then env.out.print("bad routes!") end
 
-primitive H is Handler
-  fun apply(c: Context, req: Payload val): Context iso^ =>
-    let res = Payload.response()
-    let name = c.param("name")
-    res.add_chunk("Hello")
-    if name != "" then
-      res.add_chunk(" " + name)
-    end
-    res.add_chunk("!")
-    c.respond(req, consume res)
-    consume c
+primitive H is RequestHandler
+  fun apply(ctx: Context): Context iso^ =>
+    let name = ctx.param("name")
+    let body =
+      "".join(
+        [ "Hello"; if name != "" then " " + name else "" end; "!"
+        ].values()).array()
+    ctx.respond(StatusResponse(StatusOK), body)
+    consume ctx

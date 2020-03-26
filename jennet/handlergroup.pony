@@ -2,39 +2,38 @@ use "http"
 
 class val _HandlerGroup
   let middlewares: Array[Middleware] val
-  let handler: Handler
+  let handler: RequestHandler
 
-  new val create(handler': Handler,
-    middlewares': Array[Middleware] val = recover Array[Middleware] end)
+  new val create(handler': RequestHandler, middlewares': Array[Middleware] val = [])
   =>
     middlewares = middlewares'
     handler = handler'
 
-  fun val apply(c: Context, req: Payload val) ? =>
+  fun val apply(ctx: Context) ? =>
     match middlewares.size()
     | 0 =>
-      handler(consume c, req)?
+      handler(consume ctx)?
     else
-      (let c', let req') = middlewares_apply(0, consume c, consume req)?
+      let ctx' = middlewares_apply(0, consume ctx)?
       middlewares_after(
         middlewares.size() - 1,
-        handler(consume c', consume req')?
+        handler(consume ctx')?
       )?
     end
 
-  fun val middlewares_apply(i: USize, c: Context, req: Payload val):
-    (Context iso^, Payload val) ?
+  fun val middlewares_apply(i: USize, ctx: Context)
+    : Context iso^ ?
   =>
     match i
-    | middlewares.size() => (consume c, req)
+    | middlewares.size() => consume ctx
     else
-      (let c', let req') = middlewares(i)?(consume c, req)?
-      middlewares_apply(i + 1, consume c', req')?
+      let ctx' = middlewares(i)?(consume ctx)?
+      middlewares_apply(i + 1, consume ctx')?
     end
 
-  fun middlewares_after(i: USize, c: Context): Context iso^ ? =>
+  fun middlewares_after(i: USize, ctx: Context): Context iso^ ? =>
     match i
-    | -1 => consume c
+    | -1 => consume ctx
     else
-      middlewares_after(i - 1, middlewares(i)?.after(consume c))?
+      middlewares_after(i - 1, middlewares(i)?.after(consume ctx))?
     end
