@@ -32,25 +32,23 @@ actor Main
         return
       end
 
-    let j =
-      Jennet(auth, env.out, "8080")
+    let server =
+      Jennet(auth, env.out)
         .> get("/", H)
         .> get("/:name", H)
+        .serve(ServerConfig(where port' = "8080"))
 
-    let j' = consume val j
-    try j'.serve()? else j'.dispose() end
+    if server is None then env.out.print("bad routes!") end
 
-primitive H is Handler
-  fun apply(c: Context, req: Payload val): Context iso^ =>
-    let res = Payload.response()
-    let name = c.param("name")
-    res.add_chunk("Hello")
-    if name != "" then
-      res.add_chunk(" " + name)
-    end
-    res.add_chunk("!")
-    c.respond(req, consume res)
-    consume c
+primitive H is RequestHandler
+  fun apply(ctx: Context): Context iso^ =>
+    let name = ctx.param("name")
+    let body =
+      "".join(
+        [ "Hello"; if name != "" then " " + name else "" end; "!"
+        ].values()).array()
+    ctx.respond(StatusResponse(StatusOK), body)
+    consume ctx
 ```
 
 As you can see, `:name` is a named parameter. The values are accessible via the Context. In this example :name can be retrieved by `c.param("name")`.
@@ -96,23 +94,21 @@ actor Main
       end
 
     let handler =
-      {(c: Context, req: Payload val): Context iso^ =>
-        let res = Payload.response()
-        res.add_chunk("Hello!")
-        c.respond(req, consume res)
-        consume c
+      {(ctx: Context, req: Request): Context iso^ =>
+        ctx.respond(StatusResponse(StatusOK), "Hello!".array())
+        consume ctx
       }
 
     let users = recover Map[String, String](1) end
     users("my_username") = "my_super_secret_password"
     let authenticator = BasicAuth("My Realm", consume users)
 
-    let j =
-      Jennet(auth, env.out, "8080")
+    let server =
+      Jennet(auth, env.out)
         .> get("/", handler, [authenticator])
+        .serve(ServerConfig(where port' = "8080"))
 
-    let j' = consume val j
-    try j'.serve()? else j'.dispose() end
+    if server is None then env.out.print("bad routes!") end
 ```
 
 This example uses Basic Authentication (RFC 2617) with the included BasicAuth middleware.
@@ -133,15 +129,17 @@ actor Main
         return
       end
 
-    let j = Jennet(auth, env.out, "8080")
-    try
-      j.serve_file(auth, "/", "index.html")?
-    else
-      env.out.print("invalid routes.")
-      j.dispose()
-    end
-    let j' = consume val j
-    try j'.serve()? else j'.dispose() end
+    let server =
+      try
+        Jennet(auth, env.out)
+          .> serve_file(auth, "/", "index.html")?
+          .serve(ServerConfig(where port' = "8080"))
+      else
+        env.out.print("bad file path!")
+        return
+      end
+
+    if server is None then env.out.print("bad routes!") end
 ```
 
 ### Serving Static Directory
@@ -161,14 +159,16 @@ actor Main
         return
       end
 
-    let j = Jennet(auth, env.out, "8080")
-    try
-      // a request to /fs/index.html would return ./static/index.html
-      j.serve_dir(auth, "/fs/*filepath", "static/")?
-    else
-      env.out.print("Invalid routes!")
-      j.dispose()
-    end
-    let j' = consume val j
-    try j'.serve()? else j'.dispose() end
+    let server =
+      try
+        Jennet(auth, env.out)
+          // a request to /fs/index.html would return ./static/index.html
+          .> serve_dir(auth, "/fs/*filepath", "static/")?
+          .serve(ServerConfig(where port' = "8080"))
+      else
+        env.out.print("bad file path!")
+        return
+      end
+
+    if server is None then env.out.print("bad routes!") end
 ```

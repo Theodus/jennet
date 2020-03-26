@@ -1,29 +1,45 @@
 use "collections"
 use "http"
 use "time"
+use "valbytes"
 
 class iso Context
   """
   Contains the data passed between middleware and the handler.
   """
   let _responder: Responder
-  let _params: Map[String, String] val
-  let _data: Map[String, Any val]
-  let _start_time: U64
+  let params: Map[String, String] val
+  let data: Map[String, Any val]
+  let start_time: U64
+  let session: Session
+  let request_id: RequestID
+  let request: Request
+  let body: ByteArrays
 
-  new iso create(responder': Responder, params': Map[String, String] val) =>
+  new iso create(
+    responder': Responder,
+    params': Map[String, String] val,
+    session': Session,
+    request_id': RequestID,
+    request': Request,
+    body': ByteArrays)
+  =>
     _responder = responder'
-    _params = params'
-    _data = Map[String, Any val]
-    _start_time = Time.nanos()
+    params = params'
+    data = Map[String, Any val]
+    start_time = Time.nanos()
+    session = session'
+    request_id = request_id'
+    request = request'
+    body = body'
 
-  fun ref param(key: String): String val =>
+  fun ref param(key: String): String =>
     """
     Get the URL parameter corresponding to key, return an empty String if not
     found.
     """
     try
-      _params(key)?
+      params(key)?
     else
       ""
     end
@@ -32,18 +48,17 @@ class iso Context
     """
     Get the data corresponding to key.
     """
-    _data(key)?
+    data(key)?
 
   fun ref update(key: String, value: Any val) =>
     """
     Place a key-value pair into the context, updating any existing pair with the
     same key.
     """
-    _data(key) = value
+    data(key) = value
 
-  fun ref respond(req: Payload val, res: Payload val) =>
+  fun ref respond(res: Response, res_body: ValBytes = []) =>
     """
     Respond to the given request with the response.
     """
-    let response_time = Time.nanos() - _start_time
-    _responder(req, res, response_time)
+    _responder(res, ByteArrays(res_body), this)
