@@ -12,13 +12,15 @@ actor Main
         return
       end
 
-    let j = Jennet(auth, env.out, "8080")
-    try
-      // a request to /fs/index.html would return ./static/index.html
-      j.serve_dir(auth, "/fs/*filepath", "static/")?
-    else
-      env.out.print("Invalid routes!")
-      j.dispose()
-    end
-    let j' = consume val j
-    try j'.serve()? else j'.dispose() end
+    let server =
+      try
+        Jennet(auth, env.out)
+          // a request to /fs/index.html would return ./static/index.html
+          .> serve_dir(auth, "/fs/*filepath", "static/")?
+          .serve(ServerConfig(where port' = "8080"))
+      else
+        env.out.print("bad file path!")
+        return
+      end
+
+    if server is None then env.out.print("bad routes!") end

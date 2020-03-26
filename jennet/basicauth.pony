@@ -21,9 +21,9 @@ class BasicAuth is Middleware
     _accounts = consume accounts
     _max_un_size = max_size
 
-  fun val apply(c: Context, req: Payload val): (Context iso^, Payload val) ? =>
+  fun val apply(ctx: Context): Context iso^ ? =>
     let authorized = try
-      let auth = req("Authorization")?
+      let auth = ctx.request.header("Authorization") as String
       let basic_scheme = "Basic "
       if not auth.at(basic_scheme) then error end
       let decoded = Base64.decode[String iso](auth.substring(basic_scheme.size().isize()))?
@@ -37,17 +37,14 @@ class BasicAuth is Middleware
       false
     end
     if authorized then
-      (consume c, req)
+      consume ctx
     else
-      c.respond(consume req, _RequestAuth(_realm))
+      ctx.respond(
+        recover
+          StatusResponse(StatusUnauthorized,
+            [( "WWW-Authenticate"
+             , "\"".join(["Basic realm="; _realm; ""].values())
+            )])
+        end)
       error
     end
-
-  fun val after(c: Context): Context iso^ =>
-    consume c
-
-primitive _RequestAuth
-  fun apply(realm: String): Payload iso^ =>
-    let res = Payload.response(StatusUnauthorized)
-    res("WWW-Authenticate") = "Basic realm=\"" + realm + "\""
-    consume res
