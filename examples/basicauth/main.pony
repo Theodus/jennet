@@ -1,5 +1,5 @@
 use "collections"
-use "http/server"
+use "http_server"
 use "../../jennet"
 
 actor Main

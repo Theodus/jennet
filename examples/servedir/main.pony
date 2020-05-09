@@ -1,4 +1,4 @@
-use "http/server"
+use "http_server"
 use "files"
 use "../../jennet"
 
