@@ -1,5 +1,5 @@
 use "files"
-use "http/server"
+use "http_server"
 use "valbytes"
 
 class _FileServer is RequestHandler

@@ -19,7 +19,7 @@ pony-stable: `{ "type": "github", "repo": "theodus/jennet" }`
 ### Named Parameters
 
 ```pony
-use "http"
+use "http_server"
 use "jennet"
 
 actor Main
@@ -80,7 +80,7 @@ see also: [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter
 
 ```pony
 use "collections"
-use "http"
+use "http_server"
 use "jennet"
 
 actor Main
@@ -116,7 +116,7 @@ This example uses Basic Authentication (RFC 2617) with the included BasicAuth mi
 ### Serving Static Files
 
 ```pony
-use "http"
+use "http_server"
 use "jennet"
 
 actor Main
@@ -145,7 +145,7 @@ actor Main
 ### Serving Static Directory
 
 ```pony
-use "http"
+use "http_server"
 use "files"
 use "jennet"
 
