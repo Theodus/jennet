@@ -1,4 +1,4 @@
-use "http"
+use "http/server"
 use "../../jennet"
 
 actor Main

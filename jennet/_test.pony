@@ -1,6 +1,6 @@
 use "collections"
 use "encode/base64"
-use "http"
+use "http/server"
 use "ponytest"
 use radix = "radix"
 use "valbytes"
