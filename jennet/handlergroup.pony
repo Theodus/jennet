@@ -1,4 +1,4 @@
-use "http"
+use "http/server"
 
 class val _HandlerGroup
   let middlewares: Array[Middleware] val

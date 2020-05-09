@@ -6,9 +6,9 @@
       "repo": "ponylang/crypto"
     },
     {
-      "tag": "http-ng",
+      "tag": "master",
       "type": "github",
-      "repo": "mfelsche/http"
+      "repo": "ponylang/http-server"
     },
     {
       "tag": "1.0.0",
@@ -21,7 +21,7 @@
       "repo": "mfelsche/ponycheck"
     },
     {
-      "tag": "0.4.1",
+      "tag": "0.5.0",
       "type": "github",
       "repo": "mfelsche/pony-valbytes"
     }
