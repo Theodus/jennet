@@ -1,8 +1,6 @@
 # jennet [![CircleCI](https://circleci.com/gh/Theodus/jennet.svg?style=svg)](https://circleci.com/gh/Theodus/jennet)
 A simple HTTP web framework written in Pony
 
-pony-stable: `{ "type": "github", "repo": "theodus/jennet" }`
-
 ## Features
 - **Context:** Store data that can be used by the request handler as well as any middleware.
 
@@ -15,6 +13,13 @@ pony-stable: `{ "type": "github", "repo": "theodus/jennet" }`
 - **File Server:** Easily serve static files and set custom NotFound handlers.
 
 ## Usage
+
+### Installation
+- Install [corral](https://github.com/ponylang/corral)
+- `corral add github.com/theodus/jennet.git`
+- `corral fetch` to fetch your dependencies
+- `use "jennet"` to include this package
+- `corral run -- ponyc` to compile your application
 
 ### Named Parameters
 
