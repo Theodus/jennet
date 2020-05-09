@@ -3,23 +3,19 @@ version: 2.1
 jobs:
   vs-ponyc-release:
     docker:
-      - image: ponylang/ponyc:release
+      - image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-ssl:release
     steps:
-      - run: apt update
-      - run: apt install -y libpcre2-dev libssl-dev make git clang
       - checkout
       - run:
-          make config=debug clean test examples && make config=release clean test examples
+          make config=debug ssl=0.9.0 test examples && make config=release ssl=0.9.0 test examples
 
   vs-ponyc-master:
     docker:
-      - image: ponylang/ponyc:latest
+      - image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-ssl:latest
     steps:
-      - run: apt update
-      - run: apt install -y libpcre2-dev libssl-dev make git clang
       - checkout
       - run:
-          make config=debug clean test examples && make config=release clean test examples
+          make config=debug ssl=0.9.0 test examples && make config=release ssl=0.9.0 test examples
 
 workflows:
   version: 2

@@ -1,0 +1,17 @@
+{
+  "deps": [
+    {
+      "locator": "github.com/ponylang/http-server.git",
+      "version": "0.2.0"
+    },
+    {
+      "locator": "github.com/ponylang/crypto.git",
+      "version": "1.0.0"
+    },
+    {
+      "locator": "github.com/mfelsche/ponycheck.git",
+      "version": "0.5.4"
+    }
+  ],
+  "info": {}
+}

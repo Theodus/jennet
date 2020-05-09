@@ -1,4 +1,3 @@
-PONYC ?= ponyc
 config ?= debug
 ifdef config
   ifeq (,$(filter $(config),debug release))
@@ -10,7 +9,8 @@ ifeq ($(config),debug)
 	PONYC_FLAGS += --debug
 endif
 
-PONYC_FLAGS += -o build/$(config)
+PONYC := corral run -- ponyc
+PONYC_FLAGS += -V1 -o build/$(config)
 
 ifeq ($(ssl),1.1.x)
   PONYC_FLAGS += -Dopenssl_1.1.x
@@ -20,28 +20,31 @@ else
   PONYC_FLAGS += -Dopenssl_1.1.x
 endif
 
-ALL: test
+DEPS = _corral _repos
+JENNET_SRCS = $(shell find jennet -name *.pony)
+EXAMPLES = $(shell find examples/*/* -name '*.pony' -print | xargs -n 1 dirname)
 
-build/$(config)/test: PONYC_FLAGS += --bin-name=test
-build/$(config)/test: .deps build jennet/*.pony jennet/radix/*.pony
-	stable env ${PONYC} ${PONYC_FLAGS} jennet
+ALL: test
 
 build:
 	mkdir -p build/$(config)
 
-.deps:
-	stable fetch
+${DEPS}: corral.json
+	corral fetch
+
+build/$(config)/test: ${DEPS} build ${JENNET_SRCS}
+	${PONYC} ${PONYC_FLAGS} --bin-name=test jennet
 
 test: build/$(config)/test
 	build/$(config)/test $(PONYTEST_ARGS)
 
-examples: .deps build jennet/*.pony jennet/radix/*.pony examples/*/*.pony
-	stable env ${PONYC} ${PONYC_FLAGS} examples/basicauth
-	stable env ${PONYC} ${PONYC_FLAGS} examples/params
-	stable env ${PONYC} ${PONYC_FLAGS} examples/servedir
-	stable env ${PONYC} ${PONYC_FLAGS} examples/servefile
+examples: ${EXAMPLES}
+
+${EXAMPLES}: ${DEPS} build ${JENNET_SRCS} $(shell find $@ -name *.pony)
+	${PONYC} ${PONYC_FLAGS} $@
 
 clean:
 	rm -rf build
+	corral clean
 
 .PHONY: clean test examples
