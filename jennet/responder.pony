@@ -1,5 +1,5 @@
 use "net"
-use "http/server"
+use "http_server"
 use "term"
 use "time"
 use "valbytes"

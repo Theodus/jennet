@@ -2,7 +2,7 @@ use "collections"
 use "crypto"
 use "encode/base64"
 use "itertools"
-use "http/server"
+use "http_server"
 
 class BasicAuth is Middleware
   """

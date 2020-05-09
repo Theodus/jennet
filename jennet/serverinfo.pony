@@ -1,4 +1,4 @@
-use "http/server"
+use "http_server"
 use "promises"
 
 class _ServerInfo is ServerNotify
