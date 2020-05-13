@@ -24,7 +24,6 @@ class _FileServer is RequestHandler
 
 class _DirServer is RequestHandler
   let _dir: FilePath
-  let _response_builder: ResponseBuilder = Responses.builder()
 
   new val create(dir: FilePath) =>
     _dir = dir
