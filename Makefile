@@ -9,7 +9,8 @@ ifeq ($(config),debug)
 	PONYC_FLAGS += --debug
 endif
 
-PONYC := corral run -- ponyc
+PONYC ?= ponyc
+COMPILE_WITH := corral run -- $(PONYC)
 PONYC_FLAGS += -V1 -o build/$(config)
 
 ifeq ($(ssl),1.1.x)
@@ -33,7 +34,7 @@ ${DEPS}: corral.json
 	corral fetch
 
 build/$(config)/test: ${DEPS} build ${JENNET_SRCS}
-	${PONYC} ${PONYC_FLAGS} --bin-name=test jennet
+	${COMPILE_WITH} ${PONYC_FLAGS} --bin-name=test jennet
 
 test: build/$(config)/test
 	build/$(config)/test $(PONYTEST_ARGS)
@@ -41,7 +42,7 @@ test: build/$(config)/test
 examples: ${EXAMPLES}
 
 ${EXAMPLES}: ${DEPS} build ${JENNET_SRCS} $(shell find $@ -name *.pony)
-	${PONYC} ${PONYC_FLAGS} $@
+	${COMPILE_WITH} ${PONYC_FLAGS} $@
 
 clean:
 	rm -rf build

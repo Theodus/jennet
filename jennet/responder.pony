@@ -27,9 +27,6 @@ class val DefaultResponder is Responder
   fun apply(res: Response, body: ByteArrays, ctx: Context box)
   =>
     ctx.session.send(res, body, ctx.request_id)
-    match res.header("Connection")
-    | let h: String if h.contains("close") => ctx.session.dispose()
-    end
 
     let response_time = Time.nanos() - ctx.start_time
     let time = try PosixDate(Time.seconds()).format("%d/%b/%Y %H:%M:%S")? else "ERROR" end
@@ -99,9 +96,6 @@ class val CommonResponder is Responder
 
   fun apply(res: Response, body: ByteArrays, ctx: Context box) =>
     ctx.session.send(res, body, ctx.request_id)
-    match res.header("Connection")
-    | let h: String if h.contains("close") => ctx.session.dispose()
-    end
 
     let user = ctx.request.uri().user
     let referrer =

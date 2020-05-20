@@ -96,4 +96,4 @@ actor _TestHTTPSession is Session
   be send(response: Response val, body: ByteArrays, request_id: RequestID) => None
   be send_chunk(data: ByteSeq val, request_id: RequestID) => None
   be send_no_body(response: Response val, request_id: RequestID) => None
-  be send_raw(raw: ByteSeqIter, request_id: RequestID) => None
+  be send_raw(raw: ByteSeqIter, request_id: RequestID, close_session: Bool = false) => None
