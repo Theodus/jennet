@@ -1,0 +1,18 @@
+name: ponyc update breakage test
+
+on:
+  repository_dispatch:
+    types: [shared-docker-linux-builders-updated]
+
+jobs:
+  vs-ponyc-latest:
+    name: Test against ponyc main
+    runs-on: ubuntu-latest
+    container:
+      image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-openssl_1.1.1k:release
+    steps:
+      - uses: actions/checkout@v1
+      - name: tests
+        run: make test ssl=1.1.x config=debug
+      - name: examples
+        run: make examples ssl=1.1.x config=debug

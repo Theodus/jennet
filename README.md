@@ -1,4 +1,4 @@
-# jennet [![CircleCI](https://circleci.com/gh/Theodus/jennet.svg?style=svg)](https://circleci.com/gh/Theodus/jennet)
+# jennet
 A simple HTTP web framework written in Pony
 
 ## Features
