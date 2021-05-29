@@ -1,0 +1,26 @@
+name: PR
+
+on: pull_request
+
+jobs:
+  verify-changelog:
+    name: Verify CHANGELOG is valid
+    runs-on: ubuntu-latest
+    container:
+      image: ponylang/changelog-tool:release
+    steps:
+      - uses: actions/checkout@v1
+      - name: Verify CHANGELOG
+        run: changelog-tool verify
+
+  vs-ponyc-release:
+    name: Test against recent ponyc release
+    runs-on: ubuntu-latest
+    container:
+      image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-openssl_1.1.1k:release
+    steps:
+      - uses: actions/checkout@v1
+      - name: tests
+        run: make test ssl=1.1.x config=debug
+      - name: examples
+        run: make examples ssl=1.1.x config=debug
