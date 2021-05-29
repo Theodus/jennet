@@ -1,3 +1,12 @@
 {
-  "locks": []
+  "locks": [
+    {
+      "locator": "github.com/ponylang/valbytes.git",
+      "revision": "0.6.0"
+    },
+    {
+      "locator": "github.com/ponylang/net_ssl.git",
+      "revision": "1.1.5"
+    }
+  ]
 }
