@@ -1,8 +1,8 @@
-name: ponyc update breakage test
+name: ponyc release
 
 on:
-  repository_dispatch:
-    types: [shared-docker-linux-builders-updated]
+  schedule:
+    - cron: '42 3 * * *'
 
 jobs:
   vs-ponyc-latest:

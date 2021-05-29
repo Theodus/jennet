@@ -1,4 +1,6 @@
 # jennet
+[![ponyc-release](https://github.com/Theodus/jennet/actions/workflows/ponyc-release.yml/badge.svg)](https://github.com/Theodus/jennet/actions/workflows/ponyc-release.yml)
+
 A simple HTTP web framework written in Pony
 
 ## Features
