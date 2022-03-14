@@ -1,6 +1,6 @@
 use "collections"
-use "ponytest"
-use "ponycheck"
+use "pony_test"
+use "pony_check"
 
 actor Main is TestList
   new create(env: Env) =>
