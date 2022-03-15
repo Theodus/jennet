@@ -1,24 +1,16 @@
+use "net"
+use "files"
 use "http_server"
 use "../../jennet"
 
 actor Main
   new create(env: Env) =>
-    let auth =
-      try
-        env.root as AmbientAuth
-      else
-        env.out.print("unable to use network.")
-        return
-      end
+    let tcplauth: TCPListenAuth = TCPListenAuth(env.root)
+    let fileauth: FileAuth = FileAuth(env.root)
 
     let server =
-      try
-        Jennet(auth, env.out)
-          .> serve_file(auth, "/", "index.html")?
-          .serve(ServerConfig(where port' = "8080"))
-      else
-        env.out.print("bad file path!")
-        return
-      end
+      Jennet(tcplauth, env.out)
+        .> serve_file(fileauth, "/", "index.html")
+        .serve(ServerConfig(where port' = "8080"))
 
     if server is None then env.out.print("bad routes!") end
