@@ -26,21 +26,16 @@ A simple HTTP web framework written in Pony
 ### Named Parameters
 
 ```pony
+use "net"
 use "http_server"
 use "jennet"
 
 actor Main
   new create(env: Env) =>
-    let auth =
-      try
-        env.root as AmbientAuth
-      else
-        env.out.print("unable to use network.")
-        return
-      end
+    let tcplauth: TCPListenAuth = TCPListenAuth(env.root)
 
     let server =
-      Jennet(auth, env.out)
+      Jennet(tcplauth, env.out)
         .> get("/", H)
         .> get("/:name", H)
         .serve(ServerConfig(where port' = "8080"))
@@ -86,19 +81,14 @@ see also: [julienschmidt/httprouter](https://github.com/julienschmidt/httprouter
 ### Using Middleware
 
 ```pony
+use "net"
 use "collections"
 use "http_server"
 use "jennet"
 
 actor Main
   new create(env: Env) =>
-    let auth =
-      try
-        env.root as AmbientAuth
-      else
-        env.out.print("unable to use network.")
-        return
-      end
+    let tcplauth: TCPListenAuth = TCPListenAuth(env.root)
 
     let handler =
       {(ctx: Context, req: Request): Context iso^ =>
@@ -111,7 +101,7 @@ actor Main
     let authenticator = BasicAuth("My Realm", consume users)
 
     let server =
-      Jennet(auth, env.out)
+      Jennet(tcplauth, env.out)
         .> get("/", handler, [authenticator])
         .serve(ServerConfig(where port' = "8080"))
 
@@ -123,28 +113,20 @@ This example uses Basic Authentication (RFC 2617) with the included BasicAuth mi
 ### Serving Static Files
 
 ```pony
+use "net"
+use "files"
 use "http_server"
 use "jennet"
 
 actor Main
   new create(env: Env) =>
-    let auth =
-      try
-        env.root as AmbientAuth
-      else
-        env.out.print("unable to use network.")
-        return
-      end
+    let tcplauth: TCPListenAuth = TCPListenAuth(env.root)
+    let fileauth: FileAuth = FileAuth(env.root)
 
     let server =
-      try
-        Jennet(auth, env.out)
-          .> serve_file(auth, "/", "index.html")?
-          .serve(ServerConfig(where port' = "8080"))
-      else
-        env.out.print("bad file path!")
-        return
-      end
+      Jennet(tcplauth, env.out)
+        .> serve_file(fileauth, "/", "index.html")
+        .serve(ServerConfig(where port' = "8080"))
 
     if server is None then env.out.print("bad routes!") end
 ```
@@ -152,30 +134,21 @@ actor Main
 ### Serving Static Directory
 
 ```pony
+use "net"
 use "http_server"
 use "files"
 use "jennet"
 
 actor Main
   new create(env: Env) =>
-    let auth =
-      try
-        env.root as AmbientAuth
-      else
-        env.out.print("unable to use network.")
-        return
-      end
+    let tcplauth: TCPListenAuth = TCPListenAuth(env.root)
+    let fileauth: FileAuth = FileAuth(env.root)
 
     let server =
-      try
-        Jennet(auth, env.out)
-          // a request to /fs/index.html would return ./static/index.html
-          .> serve_dir(auth, "/fs/*filepath", "static/")?
-          .serve(ServerConfig(where port' = "8080"))
-      else
-        env.out.print("bad file path!")
-        return
-      end
+      Jennet(tcplauth, env.out)
+        // a request to /fs/index.html would return ./static/index.html
+        .> serve_dir(fileauth, "/fs/*filepath", "static/")
+        .serve(ServerConfig(where port' = "8080"))
 
     if server is None then env.out.print("bad routes!") end
 ```
