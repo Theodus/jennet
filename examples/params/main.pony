@@ -1,18 +1,13 @@
+use "net"
 use "http_server"
 use "../../jennet"
 
 actor Main
   new create(env: Env) =>
-    let auth =
-      try
-        env.root as AmbientAuth
-      else
-        env.out.print("unable to use network.")
-        return
-      end
+    let tcplauth: TCPListenAuth = TCPListenAuth(env.root)
 
     let server =
-      Jennet(auth, env.out)
+      Jennet(tcplauth, env.out)
         .> get("/", H)
         .> get("/:name", H)
         .serve(ServerConfig(where port' = "8080"))
