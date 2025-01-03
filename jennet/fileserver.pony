@@ -16,7 +16,13 @@ class _FileServer is RequestHandler
           bs = bs + consume line
         end
       end
-      ctx.respond(StatusResponse(StatusOK), bs)
+      ctx.respond(
+        StatusResponse(
+          StatusOK,
+          [("Content-Length", bs.size().string())]
+        ),
+        bs
+      )
     else
       ctx.respond(StatusResponse(StatusNotFound))
     end
@@ -37,7 +43,13 @@ class _DirServer is RequestHandler
           bs = bs + consume line
         end
       end
-      ctx.respond(StatusResponse(StatusOK), bs)
+      ctx.respond(
+        StatusResponse(
+          StatusOK,
+          [("Content-Length", bs.size().string())]
+        ),
+        bs
+      )
     else
       ctx.respond(StatusResponse(StatusNotFound))
     end

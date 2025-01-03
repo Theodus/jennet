@@ -9,7 +9,13 @@ actor Main
 
     let handler =
       {(ctx: Context): Context iso^ =>
-        ctx.respond(StatusResponse(StatusOK), "Hello!".array())
+        ctx.respond(
+          StatusResponse(
+            StatusOK,
+            [("Content-Length", "6")]
+          ),
+          "Hello!".array()
+        )
         consume ctx
       }
 
