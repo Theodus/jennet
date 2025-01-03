@@ -49,7 +49,13 @@ primitive H is RequestHandler
       "".join(
         [ "Hello"; if name != "" then " " + name else "" end; "!"
         ].values()).array()
-    ctx.respond(StatusResponse(StatusOK), body)
+    ctx.respond(
+      StatusResponse(
+        StatusOK,
+        [("Content-Length", body.size().string())]
+      ),
+      body
+    )
     consume ctx
 ```
 
@@ -92,7 +98,13 @@ actor Main
 
     let handler =
       {(ctx: Context, req: Request): Context iso^ =>
-        ctx.respond(StatusResponse(StatusOK), "Hello!".array())
+        ctx.respond(
+          StatusResponse(
+            StatusOK,
+            [("Content-Length", "6")]
+          ),
+          "Hello!".array()
+        )
         consume ctx
       }
 
