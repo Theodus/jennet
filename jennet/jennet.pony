@@ -97,7 +97,7 @@ class iso Jennet
     Serve static file located at the relative filepath when GET requests are
     received for the given path.
     """
-    let caps = recover val FileCaps + FileRead + FileStat end
+    let caps = recover val FileCaps + FileRead + FileStat + FileSeek end
     _add_route("GET", path, _FileServer(FilePath(auth, filepath, caps)), [])
 
   fun ref serve_dir(auth: FileAuth, path: String, dir: String) =>
@@ -105,7 +105,7 @@ class iso Jennet
     Serve all files in dir using the incomming url path suffix denoted by
     `*filepath` in the given path.
     """
-    let caps = recover val FileCaps + FileRead + FileStat + FileLookup end
+    let caps = recover val FileCaps + FileRead + FileStat + FileLookup + FileSeek end
     _add_route("GET", path, _DirServer(FilePath(auth, dir, caps)), [])
 
   fun ref not_found(handler: RequestHandler) =>
