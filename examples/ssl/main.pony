@@ -14,7 +14,7 @@ actor Main
         try
           recover
             SSLContext
-              .>set_cert(
+              .> set_cert(
                 FilePath(fileauth, "cert.pem"),
                 FilePath(fileauth, "key.pem")
               )?
