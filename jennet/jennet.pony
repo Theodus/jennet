@@ -2,6 +2,7 @@ use "collections"
 use "files"
 use "http_server"
 use "net"
+use "net_ssl"
 use "valbytes"
 
 class iso Jennet
@@ -12,6 +13,7 @@ class iso Jennet
   let _routes: Array[_Route] iso = recover Array[_Route] end
   var _notfound: _HandlerGroup = _HandlerGroup(_DefaultNotFound)
   var _host: String = "Jennet" // TODO get host from server
+  var _sslctx: (SSLContext | None) = None
 
   new iso create(
     auth: TCPListenAuth val,
@@ -25,6 +27,12 @@ class iso Jennet
       end
     _out = out
     _auth = auth
+
+  fun ref sslctx(sslctx': SSLContext) =>
+    _sslctx = sslctx'
+    """
+    Provide a valid SSLContext to enable SSL.
+    """
 
   fun ref get(
     path: String,
@@ -127,7 +135,12 @@ class iso Jennet
     let mux = try _Mux(_routes)? else return None end
     if dump_routes then _out.print(mux.debug()) end
     let router_factory = _RouterFactory(consume mux, _responder, _notfound)
-    Server(_auth, _ServerInfo(_out, _responder), router_factory, config)
+    match _sslctx
+    | None =>
+      Server(_auth, _ServerInfo(_out, _responder), router_factory, config)
+    | let sslcontext: SSLContext =>
+      Server(_auth, _ServerInfo(_out, _responder), router_factory, config, sslcontext)
+    end
 
   fun ref _add_route(method: String, path: String,
     handler: RequestHandler, middlewares: Array[Middleware] val)
