@@ -167,12 +167,12 @@ actor Main
 
 ### Serving over SSL
 
-Refer to the [SSLContext](https://ponylang.github.io/net_ssl/net_ssl-SSLContext/) documentation in [net_ssl](https://ponylang.github.io/net_ssl/) for SSL / TLS configuration.
+Refer to the [SSLContext](https://ponylang.github.io/ssl/ssl-net-SSLContext/) documentation in [net_ssl](https://ponylang.github.io/ssl/) for SSL / TLS configuration.
 
 ```pony
 use "net"
 use "files"
-use "net_ssl"
+use "ssl/net"
 use "http_server"
 use "jennet"
 

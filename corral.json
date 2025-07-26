@@ -1,17 +1,22 @@
 {
+  "packages": ["jennet"],
   "deps": [
     {
       "locator": "github.com/ponylang/http-server.git",
-      "version": "0.6.2"
+      "version": "0.6.3"
     },
     {
-      "locator": "github.com/ponylang/crypto.git",
-      "version": "1.2.3"
+      "locator": "github.com/ponylang/ssl.git",
+      "version": "1.0.0"
     },
     {
       "locator": "github.com/ponylang/json.git",
       "version": "0.1.0"
     }
   ],
-  "info": {}
+  "info": {
+    "description": "A simple HTTP web framework written in Pony",
+    "version": "0.2.0",
+    "name": "jennet"
+  }
 }

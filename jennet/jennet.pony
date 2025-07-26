@@ -2,7 +2,7 @@ use "collections"
 use "files"
 use "http_server"
 use "net"
-use "net_ssl"
+use "ssl/net"
 use "valbytes"
 
 class iso Jennet

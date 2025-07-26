@@ -1,6 +1,6 @@
 use "net"
 use "files"
-use "net_ssl"
+use "ssl/net"
 use "http_server"
 use "../../jennet"
 
